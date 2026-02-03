@@ -100,5 +100,6 @@ void app_main(void)
         /* Toggle the LED state */
         s_led_state = !s_led_state;
         vTaskDelay(CONFIG_BLINK_PERIOD / portTICK_PERIOD_MS);
+        printf("Hello world!\n");
     }
 }

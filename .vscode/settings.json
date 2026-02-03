@@ -1,5 +1,16 @@
 {
-    "idf.pythonInstallPath": "D:\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
-    "idf.espIdfPathWin": "D:/Espressif/frameworks/esp-idf-v5.4.2/",
-    "idf.toolsPathWin": "D:\\Espressif"
+  "idf.pythonInstallPath": "D:\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
+  "idf.espIdfPathWin": "D:/Espressif/frameworks/esp-idf-v5.4.2/",
+  "idf.toolsPathWin": "D:\\Espressif",
+  "idf.flashType": "UART",
+  "idf.portWin": "COM7",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "clangd.path": "D:\\Espressif\\tools\\esp-clang\\esp-18.1.2_20240912\\esp-clang\\bin\\clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=c:\\Github_repository\\Gaming_esp32s3_LCD_eye_portable\\build"
+  ]
 }
