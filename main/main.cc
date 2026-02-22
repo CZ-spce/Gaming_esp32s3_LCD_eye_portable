@@ -30,6 +30,9 @@
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
 
+// 声明互斥锁
+SemaphoreHandle_t lvgl_mutex;
+
 void init_spiffs(void) {
     ESP_LOGI("SPIFFS", "Initializing SPIFFS");
 
@@ -98,6 +101,8 @@ void system_monitor_task(void *pvParameters) {
 }
 extern "C" void app_main(void)
 {
+    lvgl_mutex = xSemaphoreCreateRecursiveMutex(); // 创建递归锁
+
     printf("enter app_main\n");
 
     size_t psram_free = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
@@ -131,35 +136,11 @@ extern "C" void app_main(void)
     // 运行 LVGL 任务处理循环
     while (1) {
         // 处理 LVGL 的绘制、动画和输入事件
-        lv_timer_handler();
-        // ESP_LOGI(TAG, "running...");
+        if (xSemaphoreTakeRecursive(lvgl_mutex, portMAX_DELAY)) {
+            lv_timer_handler();
+            xSemaphoreGiveRecursive(lvgl_mutex);
+        }
 
-
-// // ▼▼▼ 条件编译区开始 ▼▼▼
-// #if DEBUG_MODE
-//         // 使用静态变量保存上一次记录的时间
-//         static int64_t last_print_time = 0;
-//         int64_t now = esp_timer_get_time();
-        
-//         // 每隔 1000000 微秒 (1秒) 触发一次打印
-//         if (now - last_print_time >= 1000000) { 
-//             // 1. 获取内部 SRAM 剩余 (对应 DMA 和核心运行内存)
-//             size_t sram_free = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
-            
-//             // 2. 获取外部 PSRAM 剩余 (对应 LVGL 图片缓存等)
-//             psram_free = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-            
-//             // 3. 获取 CPU 占用率 (100 - LVGL 系统空闲率)
-//             uint8_t cpu_usage = 100 - lv_timer_get_idle();
-            
-//             // 打印出整齐的性能报告
-//             ESP_LOGI(TAG, "=> [性能监控] CPU占用: %3d%% | 内部SRAM剩余: %6d 字节 | PSRAM剩余: %7d 字节", 
-//                      cpu_usage, sram_free, psram_free);
-            
-//             last_print_time = now;
-//         }
-// #endif
-// // ▲▲▲ 条件编译区结束 ▲▲▲
 
         // 释放 CPU 资源，防止触发看门狗 (Watchdog) 报错
         vTaskDelay(pdMS_TO_TICKS(10)); 

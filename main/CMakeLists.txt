@@ -4,7 +4,7 @@ idf_component_register(SRCS "main.cc"
                             "my_lvgl/lvgl_UI_display.c"
                             "my_lvgl/lvgl_tick_timer.c"
                             "gif_encoder/my_gifdec.cc"
-                            "gif_encoder/manual_gif_player.c"
+                           
                     PRIV_REQUIRES spi_flash
                     PRIV_REQUIRES spi_flash spiffs  # 添加 spiffs 依赖
                     INCLUDE_DIRS "LCD_gc9a01"  

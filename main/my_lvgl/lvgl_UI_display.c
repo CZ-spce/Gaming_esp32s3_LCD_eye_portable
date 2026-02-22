@@ -13,7 +13,9 @@
 
 static const char *TAG = "UI_GIF";
 
-// ▼▼▼ 条件编译开关：1 开启性能打印，0 关闭 ▼▼▼
+extern SemaphoreHandle_t lvgl_mutex; // 引用 main 中的锁
+
+// ▼▼▼ 调试打印开关：1 开启性能打印，0 关闭 ▼▼▼
 #define DEBUG_DECODE_PERF 1
 
 #define RGB888_TO_RGB565(r, g, b) (((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3))
@@ -68,54 +70,48 @@ static void gif_manual_decode_task(void *arg) {
 
     while (1) {
         int64_t start_us = esp_timer_get_time();
-
-        // 1. 解码一帧
+        
+        // 1. 解码一帧（纯计算，不需要拿锁）
         int ret = my_gd_get_frame(gif);
         if (ret == 0) {
             my_gd_rewind(gif);
-            continue;
+            continue; 
         } else if (ret == -1) {
             ESP_LOGE(TAG, "Decode error occurred");
             break;
         }
 
-        // 优化后的循环
+        // 2. 指针转换优化
         uint8_t *src = gif->canvas;
         uint16_t *dst = g_gif_frame_buf;
         int pixel_count = GIF_RES_W * GIF_RES_H;
-
         for (int i = 0; i < pixel_count; i++) {
-            // 假设 canvas 是 R, G, B 连续存储
             *dst++ = RGB888_TO_RGB565(src[0], src[1], src[2]);
             src += 3;
+            // 每处理 120 行像素释放一次 CPU，防止长时间占用总线，确保双核并发流畅
+            if (i % (GIF_RES_W * 120) == 0) vTaskDelay(1); 
         }
 
-        // // 2. RGB888 -> RGB565 转换
-        // for (int y = 0; y < GIF_RES_H; y++) {
-        //     for (int x = 0; x < GIF_RES_W; x++) {
-        //         uint8_t r, g, b;
-        //         gd_get_pixel_rgb(gif, x, y, &r, &g, &b);
-        //         uint16_t c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-        //         g_gif_frame_buf[y * GIF_RES_W + x] = c;
-        //     }
-        // }
-
-        if (g_gif_img_obj) {
-            lv_obj_invalidate(g_gif_img_obj);
+        // 3. 安全刷新 UI：缩小锁的持有时间
+        // 尝试获取锁，不建议死等，防止主任务渲染耗时太长导致解码任务卡死
+        if (xSemaphoreTakeRecursive(lvgl_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+            if (g_gif_img_obj) {
+                lv_obj_invalidate(g_gif_img_obj);
+            }
+            xSemaphoreGiveRecursive(lvgl_mutex);
         }
 
-        // 3. 计算时间
+        // 4. 动态计算等待时间
         int64_t decode_end_us = esp_timer_get_time();
         int64_t decode_time_ms = (decode_end_us - start_us) / 1000;
-
         int target_ms = gif->gce.delay * 10;
         if (target_ms < 10) target_ms = 10;
         
+        // 强制最小 30ms 延时，确保主渲染任务和 IDLE 任务有足够的执行窗口
         int wait_ms = target_ms - (int)decode_time_ms;
-        if (wait_ms < 10) wait_ms = 10;
+        if (wait_ms < 10) wait_ms = 10; 
 
 #if DEBUG_DECODE_PERF
-        // 每秒打印一次，避免日志过多拖慢系统
         static int64_t last_log_time = 0;
         if (decode_end_us - last_log_time > 1000000) {
             ESP_LOGI(TAG, "GIF Decode: %lld ms | Target: %d ms | Actual Wait: %d ms", 
@@ -123,7 +119,6 @@ static void gif_manual_decode_task(void *arg) {
             last_log_time = decode_end_us;
         }
 #endif
-
         vTaskDelay(pdMS_TO_TICKS(wait_ms));
     }
 
@@ -134,12 +129,14 @@ static void gif_manual_decode_task(void *arg) {
 
 void start_manual_gif_display(const char * filename) {
     size_t buf_size = GIF_RES_W * GIF_RES_H * 2;
-    g_gif_frame_buf = (uint16_t *)heap_caps_malloc(buf_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    // 重要修改：将 GIF 帧缓存申请在内部 SRAM (INTERNAL)，提升访问速度
+    g_gif_frame_buf = (uint16_t *)heap_caps_malloc(buf_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
 
     if (!g_gif_frame_buf) {
-        ESP_LOGE(TAG, "Failed to allocate PSRAM for GIF frame buffer");
+        ESP_LOGE(TAG, "Failed to allocate Internal SRAM for GIF frame buffer");
         return;
     }
+
     memset(g_gif_frame_buf, 0, buf_size);
 
     memset(&g_gif_dsc, 0, sizeof(g_gif_dsc));
@@ -153,5 +150,6 @@ void start_manual_gif_display(const char * filename) {
     lv_image_set_src(g_gif_img_obj, &g_gif_dsc);
     lv_obj_center(g_gif_img_obj);
 
-    xTaskCreatePinnedToCore(gif_manual_decode_task, "gif_task", 8192, (void*)filename, 5, NULL, 1);
+    // 优先级设定为 2，略高于 main 任务但不过度抢占
+    xTaskCreatePinnedToCore(gif_manual_decode_task, "gif_task", 8192, (void*)filename, 1, NULL, 1);
 }
