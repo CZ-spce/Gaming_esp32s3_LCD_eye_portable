@@ -16,6 +16,7 @@ static const char *TAG = "UI_GIF";
 // ▼▼▼ 条件编译开关：1 开启性能打印，0 关闭 ▼▼▼
 #define DEBUG_DECODE_PERF 1
 
+#define RGB888_TO_RGB565(r, g, b) (((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3))
 // 配置参数
 #define GIF_RES_W 240
 #define GIF_RES_H 240
@@ -78,15 +79,26 @@ static void gif_manual_decode_task(void *arg) {
             break;
         }
 
-        // 2. RGB888 -> RGB565 转换
-        for (int y = 0; y < GIF_RES_H; y++) {
-            for (int x = 0; x < GIF_RES_W; x++) {
-                uint8_t r, g, b;
-                gd_get_pixel_rgb(gif, x, y, &r, &g, &b);
-                uint16_t c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-                g_gif_frame_buf[y * GIF_RES_W + x] = c;
-            }
+        // 优化后的循环
+        uint8_t *src = gif->canvas;
+        uint16_t *dst = g_gif_frame_buf;
+        int pixel_count = GIF_RES_W * GIF_RES_H;
+
+        for (int i = 0; i < pixel_count; i++) {
+            // 假设 canvas 是 R, G, B 连续存储
+            *dst++ = RGB888_TO_RGB565(src[0], src[1], src[2]);
+            src += 3;
         }
+
+        // // 2. RGB888 -> RGB565 转换
+        // for (int y = 0; y < GIF_RES_H; y++) {
+        //     for (int x = 0; x < GIF_RES_W; x++) {
+        //         uint8_t r, g, b;
+        //         gd_get_pixel_rgb(gif, x, y, &r, &g, &b);
+        //         uint16_t c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        //         g_gif_frame_buf[y * GIF_RES_W + x] = c;
+        //     }
+        // }
 
         if (g_gif_img_obj) {
             lv_obj_invalidate(g_gif_img_obj);

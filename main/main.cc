@@ -25,7 +25,7 @@
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
 #define DEBUG_MODE 1
 
-#define GIF_FILE_PATH "angry.gif"
+#define GIF_FILE_PATH "on.gif"
 
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
@@ -132,7 +132,7 @@ extern "C" void app_main(void)
     while (1) {
         // 处理 LVGL 的绘制、动画和输入事件
         lv_timer_handler();
-        ESP_LOGI(TAG, "running...");
+        // ESP_LOGI(TAG, "running...");
 
 
 // // ▼▼▼ 条件编译区开始 ▼▼▼
