@@ -5,6 +5,7 @@
 #include "esp_log.h"   
 #include "esp_err.h"  
 #include "esp_heap_caps.h"
+#include "esp_timer.h"
 
 // 自定义 GIF 库
 #include "gif_encoder/my_gifdec.h"
@@ -21,9 +22,13 @@
 #include "esp_spiffs.h"
 #include "esp_vfs.h"
 
+// ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
+#define DEBUG_MODE 1
 
+#define GIF_FILE_PATH "angry.gif"
 
 static const char *TAG = "main";
+static const char *T_TAG = "SYS_MONITOR";
 
 void init_spiffs(void) {
     ESP_LOGI("SPIFFS", "Initializing SPIFFS");
@@ -56,7 +61,41 @@ void init_spiffs(void) {
         ESP_LOGI("SPIFFS", "Partition size: total: %d, used: %d", total, used);
     }
 }
+ 
 
+
+
+void system_monitor_task(void *pvParameters) {
+    // 分配两个缓冲区，或者复用一个足够大的
+    char *stats_buffer = (char *)malloc(2048); 
+    if (stats_buffer == NULL) {
+        vTaskDelete(NULL);
+        return;
+    }
+
+    while (1) {
+        printf("\n================ 任务状态统计 (vTaskList) ================\n");
+        printf("任务名称\t状态\t优先级\t剩余栈\t任务编号\n");
+        // 1. 获取 状态、优先级、栈等信息
+        vTaskList(stats_buffer);
+        printf("%s", stats_buffer);
+
+        printf("\n================ CPU 占用统计 (RunTimeStats) ===============\n");
+        printf("任务名称\t运行时间\t\t比例\n");
+        // 2. 获取 CPU 运行时间百分比
+        vTaskGetRunTimeStats(stats_buffer);
+        printf("%s", stats_buffer);
+        
+        printf("----------------------------------------------------------\n");
+        // 打印内存状态
+        ESP_LOGI(T_TAG, "内部SRAM剩余: %d bytes | PSRAM剩余: %d bytes", 
+                 heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                 heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+
+        vTaskDelay(pdMS_TO_TICKS(5000)); 
+    }
+    free(stats_buffer);
+}
 extern "C" void app_main(void)
 {
     printf("enter app_main\n");
@@ -71,7 +110,6 @@ extern "C" void app_main(void)
     ESP_LOGI(TAG, "Initialize LVGL...");
     lv_init();
     lv_port_disp_init();
-    
     lvgl_tick_init();
 
     ESP_LOGI(TAG, "4. Create UI...");
@@ -79,25 +117,49 @@ extern "C" void app_main(void)
     // 获取当前活动屏幕
     lv_obj_t * scr = lv_screen_active();
     
-    show_angry_gif();
+    start_manual_gif_display(GIF_FILE_PATH);
 
 
     ESP_LOGI(TAG, "5. Enter main loop...");
 
-    uint16_t get_PSRAM_count = 0;
+ // ▼▼▼ 条件编译区开始 ▼▼▼
+#if DEBUG_MODE
+    xTaskCreate(system_monitor_task, "sys_monitor", 4096, NULL, 1, NULL);
+#endif
+// ▲▲▲ 条件编译区结束 ▲▲▲
+
     // 运行 LVGL 任务处理循环
     while (1) {
         // 处理 LVGL 的绘制、动画和输入事件
         lv_timer_handler();
         ESP_LOGI(TAG, "running...");
-        get_PSRAM_count++;
-        if(get_PSRAM_count>100)
-        {
-            psram_free = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-            ESP_LOGI(TAG, "Current PSRAM free size: %d bytes", psram_free);
-            get_PSRAM_count = 0;
-        }
+
+
+// // ▼▼▼ 条件编译区开始 ▼▼▼
+// #if DEBUG_MODE
+//         // 使用静态变量保存上一次记录的时间
+//         static int64_t last_print_time = 0;
+//         int64_t now = esp_timer_get_time();
         
+//         // 每隔 1000000 微秒 (1秒) 触发一次打印
+//         if (now - last_print_time >= 1000000) { 
+//             // 1. 获取内部 SRAM 剩余 (对应 DMA 和核心运行内存)
+//             size_t sram_free = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+            
+//             // 2. 获取外部 PSRAM 剩余 (对应 LVGL 图片缓存等)
+//             psram_free = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+            
+//             // 3. 获取 CPU 占用率 (100 - LVGL 系统空闲率)
+//             uint8_t cpu_usage = 100 - lv_timer_get_idle();
+            
+//             // 打印出整齐的性能报告
+//             ESP_LOGI(TAG, "=> [性能监控] CPU占用: %3d%% | 内部SRAM剩余: %6d 字节 | PSRAM剩余: %7d 字节", 
+//                      cpu_usage, sram_free, psram_free);
+            
+//             last_print_time = now;
+//         }
+// #endif
+// // ▲▲▲ 条件编译区结束 ▲▲▲
 
         // 释放 CPU 资源，防止触发看门狗 (Watchdog) 报错
         vTaskDelay(pdMS_TO_TICKS(10)); 
