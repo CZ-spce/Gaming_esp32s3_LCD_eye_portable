@@ -23,7 +23,7 @@ extern "C" {
 // 对外暴露的公共接口
 void my_gc9a01_init(void);
 void my_gc9a01_test_display(void);
-
+void my_gc9a01_draw_bitmap(int x_start, int y_start, int x_end, int y_end, const void *color_data);
 #ifdef __cplusplus
 }
 #endif

@@ -1,5 +1,11 @@
 idf_component_register(SRCS "main.cc"
                             "LCD_gc9a01/my_gc9a01.c"
+                            "my_lvgl/lv_port_disp.c"
+                            "my_lvgl/lvgl_UI_display.c"
+                            "my_lvgl/lvgl_tick_timer.c"
                     PRIV_REQUIRES spi_flash
                     INCLUDE_DIRS "LCD_gc9a01"  
+                                 "my_lvgl"
+                                 "."
+                    REQUIRES lvgl # 把 LVGL 链接进来
                     )

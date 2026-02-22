@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 // 全局变量
-static spi_device_handle_t spi;
 static esp_lcd_panel_handle_t panel_handle;
 
 // 内部函数声明
@@ -40,7 +39,7 @@ static void init_lcd_io(void)
     // 创建 GC9A01 面板实例
     esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = PIN_NUM_RST,
-        .rgb_endian = LCD_RGB_ENDIAN_RGB, // 如果显示颜色颠倒，可以尝试改成 LCD_RGB_ENDIAN_BGR
+        .rgb_endian = LCD_RGB_ENDIAN_BGR, // 如果显示颜色颠倒，可以尝试改成 LCD_RGB_ENDIAN_BGR
         .bits_per_pixel = 16, //一个像素占用16bit,即2个字节
         .vendor_config = NULL,
     };
@@ -55,6 +54,9 @@ static void init_panel(void)
     
     //解决 IPS 屏幕的颜色反转问题
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
+
+    //解决显示镜像问题
+    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 
     // 关键修正：开启显示，否则屏幕默认黑屏
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
@@ -82,4 +84,11 @@ void my_gc9a01_test_display(void)
 
     free(buffer);
     printf("Display test completed (Screen should be RED).\n");
+}
+
+// 提供给 LVGL 调用的区域刷新函数
+void my_gc9a01_draw_bitmap(int x_start, int y_start, int x_end, int y_end, const void *color_data)
+{
+    // 直接调用 esp_lcd 现成的 DMA 刷屏接口
+    esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
 }
