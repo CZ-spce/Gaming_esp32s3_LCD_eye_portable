@@ -5,12 +5,17 @@
 #include "esp_log.h"   
 #include "esp_err.h"  
 #include "esp_heap_caps.h"
+
+// 自定义 GIF 库
+#include "gif_encoder/my_gifdec.h"
+
 /* 显示组件 */
+#include "lvgl_UI_display.h"
 #include "LCD_gc9a01/my_gc9a01.h"
 #include "lv_port_disp.h"
 #include "lvgl.h"
 #include "lvgl_tick_timer.h"
-#include "lvgl_UI_display.h"
+
 
 /* 文件系统 */
 #include "esp_spiffs.h"

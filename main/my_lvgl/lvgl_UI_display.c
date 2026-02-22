@@ -102,8 +102,8 @@ void create_cool_ui(lv_obj_t * parent)
 
 // 创建一个函数来显示你的动图
 void show_angry_gif(void) {
-    // // 1. 设置屏幕背景为纯黑色 (通常 GIF 在黑底下显示效果最好，特别是没有透明通道时)
-    // lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
+    // 1. 设置屏幕背景为纯黑色 (通常 GIF 在黑底下显示效果最好，特别是没有透明通道时)
+    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
 
     // 把 lv_color_black() 改成红色，方便肉眼识别
     lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0xFF0000), 0);
