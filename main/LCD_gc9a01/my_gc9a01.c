@@ -41,7 +41,7 @@ static void init_lcd_io(void)
     esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = PIN_NUM_RST,
         .rgb_endian = LCD_RGB_ENDIAN_RGB, // 如果显示颜色颠倒，可以尝试改成 LCD_RGB_ENDIAN_BGR
-        .bits_per_pixel = 16,
+        .bits_per_pixel = 16, //一个像素占用16bit,即2个字节
         .vendor_config = NULL,
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_gc9a01(io_handle, &panel_config, &panel_handle));

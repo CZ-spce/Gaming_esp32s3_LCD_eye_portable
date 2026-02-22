@@ -7,8 +7,6 @@
 #include "LCD_gc9a01/my_gc9a01.h"
 
 
-
-
 extern "C" void app_main(void)
 {
     printf("enter app_main\n");
