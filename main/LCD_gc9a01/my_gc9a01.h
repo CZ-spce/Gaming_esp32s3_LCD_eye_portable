@@ -24,6 +24,9 @@ extern "C" {
 void my_gc9a01_init(void);
 void my_gc9a01_test_display(void);
 void my_gc9a01_draw_bitmap(int x_start, int y_start, int x_end, int y_end, const void *color_data);
+// //允许 LVGL 把它的 disp 对象传给底层驱动 ▼▼▼
+// void my_gc9a01_set_lvgl_disp(void * disp);
+
 #ifdef __cplusplus
 }
 #endif

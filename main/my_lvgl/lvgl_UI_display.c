@@ -2,7 +2,7 @@
 #include "lv_port_disp.h"
 #include "lvgl.h"
 #include "lvgl_UI_display.h"
-
+#include "esp_log.h"   
 #define GifImage_path "A:/spiffs/angry.gif"
 
 /*lvgl测试函数
@@ -100,21 +100,29 @@ void create_cool_ui(lv_obj_t * parent)
     lv_anim_start(&a_text);
 }
 
-// 创建一个函数来显示你的动图
 void show_angry_gif(void) {
-    // 1. 设置屏幕背景为纯黑色 (通常 GIF 在黑底下显示效果最好，特别是没有透明通道时)
-    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
+    // 1. 先把背景换成深红色！
+    // 如果烧录后屏幕变红了，说明底层驱动和 LVGL 是活着的，纯粹是 GIF 没加载出来。
+    // 如果还是纯黑，说明在初始化阶段屏幕就卡死了。
+    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0x8B0000), 0);
 
-    // 2. 创建一个 GIF 控件
+    // 2. 暴力测试：C 语言底层能看到这个文件吗？
+    FILE * f = fopen("/spiffs/angry.gif", "r");
+    if (f == NULL) {
+        ESP_LOGE("GIF_DEBUG", "糟糕！底层 C 库根本找不到 /spiffs/angry.gif 文件！");
+        ESP_LOGE("GIF_DEBUG", "请检查 CMakeLists.txt 和 spiffs_data 文件夹。");
+        return; // 文件都不存在，直接退出，不用往下让 LVGL 加载了
+    } else {
+        // 获取文件大小
+        fseek(f, 0, SEEK_END);
+        long size = ftell(f);
+        fclose(f);
+        ESP_LOGI("GIF_DEBUG", "太棒了！底层找到了 angry.gif，文件大小: %ld 字节", size);
+    }
+
+    // 3. 交给 LVGL 渲染
     lv_obj_t * my_gif = lv_gif_create(lv_screen_active());
-    
-    // 3. 设置 GIF 的文件路径
-    // 这里的奥秘是：
-    // "A:" 是刚才在 menuconfig 里配置的 LVGL POSIX 驱动器号
-    // "/spiffs/angry.gif" 是传给 ESP-IDF 底层文件系统的绝对路径
     lv_gif_set_src(my_gif, "A:/spiffs/angry.gif");
-    
-    // 4. 将 GIF 居中对齐
     lv_obj_center(my_gif);
 }
 

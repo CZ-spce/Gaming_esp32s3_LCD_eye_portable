@@ -68,6 +68,9 @@ void lv_port_disp_init(void)
     lv_display_t * disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
     lv_display_set_flush_cb(disp, disp_flush);
 
+    // /* ▼▼▼ 关键修改 1：把创建好的 disp 对象绑定到底层驱动 ▼▼▼ */
+    // my_gc9a01_set_lvgl_disp(disp);
+
     // /* Example 1
     //  * One buffer for partial rendering*/
     // LV_ATTRIBUTE_MEM_ALIGN
