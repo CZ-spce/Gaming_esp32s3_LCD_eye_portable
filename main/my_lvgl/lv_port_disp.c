@@ -77,11 +77,11 @@ void lv_port_disp_init(void)
     /* Example 2
      * Two buffers for partial rendering
      * In flush_cb DMA or similar hardware should be used to update the display in the background.*/
-    // LV_ATTRIBUTE_MEM_ALIGN
-    // static uint8_t buf_2_1[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
-    // LV_ATTRIBUTE_MEM_ALIGN
-    // static uint8_t buf_2_2[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
-    // lv_display_set_buffers(disp, buf_2_1, buf_2_2, sizeof(buf_2_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_2_1[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
+    LV_ATTRIBUTE_MEM_ALIGN
+    static uint8_t buf_2_2[MY_DISP_HOR_RES * 10 * BYTE_PER_PIXEL];
+    lv_display_set_buffers(disp, buf_2_1, buf_2_2, sizeof(buf_2_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     // /* Example 3
     //  * Two buffers screen sized buffer for double buffering.
@@ -93,27 +93,27 @@ void lv_port_disp_init(void)
     // static uint8_t buf_3_2[MY_DISP_HOR_RES * MY_DISP_VER_RES * BYTE_PER_PIXEL];
     // lv_display_set_buffers(disp, buf_3_1, buf_3_2, sizeof(buf_3_1), LV_DISPLAY_RENDER_MODE_DIRECT);
 
-    /* -------------------------------------------------------------
-     * Example 3 (PSRAM 终极形态)：全屏双缓冲，放飞自我！
-     * -------------------------------------------------------------*/
-    // 计算单张全屏画面的总字节数 (240 * 240 * 2 = 115200 字节)
-    uint32_t buf_size = MY_DISP_HOR_RES * MY_DISP_VER_RES * BYTE_PER_PIXEL;
+    // /* -------------------------------------------------------------
+    //  * Example 3 (PSRAM 终极形态)：全屏双缓冲，放飞自我！
+    //  * -------------------------------------------------------------*/
+    // // 计算单张全屏画面的总字节数 (240 * 240 * 2 = 115200 字节)
+    // uint32_t buf_size = MY_DISP_HOR_RES * MY_DISP_VER_RES * BYTE_PER_PIXEL;
 
-    // 使用 heap_caps_malloc 强制在外部 PSRAM (MALLOC_CAP_SPIRAM) 中分配两块巨大的内存
-    uint8_t *buf_3_1 = (uint8_t *)heap_caps_malloc(buf_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    uint8_t *buf_3_2 = (uint8_t *)heap_caps_malloc(buf_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    // // 使用 heap_caps_malloc 强制在外部 PSRAM (MALLOC_CAP_SPIRAM) 中分配两块巨大的内存
+    // uint8_t *buf_3_1 = (uint8_t *)heap_caps_malloc(buf_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    // uint8_t *buf_3_2 = (uint8_t *)heap_caps_malloc(buf_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 
-    // 安全检查：如果分配失败，说明 menuconfig 里的 PSRAM 没开成功，或者硬件不支持
-    if (buf_3_1 == NULL || buf_3_2 == NULL) {
-        ESP_LOGE("LVGL_PORT", "Failed to allocate display buffers in PSRAM! Check menuconfig.");
-        return; // 直接返回，防止后续空指针死机
-    }
+    // // 安全检查：如果分配失败，说明 menuconfig 里的 PSRAM 没开成功，或者硬件不支持
+    // if (buf_3_1 == NULL || buf_3_2 == NULL) {
+    //     ESP_LOGE("LVGL_PORT", "Failed to allocate display buffers in PSRAM! Check menuconfig.");
+    //     return; // 直接返回，防止后续空指针死机
+    // }
 
-    ESP_LOGI("LVGL_PORT", "Successfully allocated %lu bytes in PSRAM for display buffers.", buf_size * 2);
+    // ESP_LOGI("LVGL_PORT", "Successfully allocated %lu bytes in PSRAM for display buffers.", buf_size * 2);
 
-    vTaskDelay(pdMS_TO_TICKS(10)); 
+    // vTaskDelay(pdMS_TO_TICKS(10)); 
 
-    lv_display_set_buffers(disp, buf_3_1, buf_3_2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    // lv_display_set_buffers(disp, buf_3_1, buf_3_2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
 }
     

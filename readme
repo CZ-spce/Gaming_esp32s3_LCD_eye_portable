@@ -4,3 +4,4 @@
            3.以及添加创建的分区表
            4.修改 CMakeLists.txt 实现自动打包烧录
 使用lvgl显示gif图片:菜单开启LV_USE_FS_POSIX和LV_USE_GIF
+让lvgl在PSRAM中解码:需要在菜单中开启lvgl使用PSRAM
