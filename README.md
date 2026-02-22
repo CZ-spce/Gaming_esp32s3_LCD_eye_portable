@@ -1,2 +1,0 @@
-# Gaming_esp32s3_LCD_eye_portable
-可移植版esp32s3小智眼睛
