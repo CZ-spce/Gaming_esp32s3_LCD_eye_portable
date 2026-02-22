@@ -3,7 +3,7 @@
   "idf.espIdfPathWin": "D:/Espressif/frameworks/esp-idf-v5.4.2/",
   "idf.toolsPathWin": "D:\\Espressif",
   "idf.flashType": "UART",
-  "idf.portWin": "COM10",
+  "idf.portWin": "COM15",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"
   },
@@ -12,5 +12,6 @@
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=d:\\Espressif\\frameworks\\esp-idf-v5.4.2\\examples\\get-started\\hello_world\\build"
-  ]
+  ],
+  "idf.currentSetup": "D:/Espressif/frameworks/esp-idf-v5.4.2/"
 }
