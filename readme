@@ -1,1 +1,6 @@
-菜单配置开启PSRAM，并且mode选择octal
+使用PSRAM：菜单配置开启PSRAM，并且mode选择octal
+使用spiff: 1.创建分区表后
+           2.在菜单中开启flash的16M（默认2M）
+           3.以及添加创建的分区表
+           4.修改 CMakeLists.txt 实现自动打包烧录
+使用lvgl显示gif图片:菜单开启LV_USE_FS_POSIX和LV_USE_GIF

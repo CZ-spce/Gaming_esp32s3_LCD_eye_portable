@@ -3,6 +3,8 @@
 #include "lvgl.h"
 #include "lvgl_UI_display.h"
 
+#define GifImage_path "A:/spiffs/angry.gif"
+
 /*lvgl测试函数
   UI效果：深蓝色背景，清晰可见的白色文字
   用途：主要用于测试lvgl的硬件搭建是否成功，以及字节顺序是否正确
@@ -97,3 +99,22 @@ void create_cool_ui(lv_obj_t * parent)
     lv_anim_set_values(&a_text, 0, 100);
     lv_anim_start(&a_text);
 }
+
+// 创建一个函数来显示你的动图
+void show_angry_gif(void) {
+    // 1. 设置屏幕背景为纯黑色 (通常 GIF 在黑底下显示效果最好，特别是没有透明通道时)
+    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
+
+    // 2. 创建一个 GIF 控件
+    lv_obj_t * my_gif = lv_gif_create(lv_screen_active());
+    
+    // 3. 设置 GIF 的文件路径
+    // 这里的奥秘是：
+    // "A:" 是刚才在 menuconfig 里配置的 LVGL POSIX 驱动器号
+    // "/spiffs/angry.gif" 是传给 ESP-IDF 底层文件系统的绝对路径
+    lv_gif_set_src(my_gif, "A:/spiffs/angry.gif");
+    
+    // 4. 将 GIF 居中对齐
+    lv_obj_center(my_gif);
+}
+

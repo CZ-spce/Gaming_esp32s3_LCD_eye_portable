@@ -10,7 +10,7 @@ extern "C" {
 
 void lvgl_UI_test(lv_obj_t * scr);
 void create_cool_ui(lv_obj_t * parent);
-
+void show_angry_gif(void);
 #ifdef __cplusplus
 }
 #endif
