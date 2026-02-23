@@ -25,13 +25,12 @@
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
 #define DEBUG_MODE 1
 
-#define GIF_FILE_PATH "down.gif"
+#define GIF_FILE_PATH "angry.gif"
 
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
 
-// 声明互斥锁
-SemaphoreHandle_t lvgl_mutex;
+
 
 void init_spiffs(void) {
     ESP_LOGI("SPIFFS", "Initializing SPIFFS");
@@ -103,7 +102,6 @@ void system_monitor_task(void *pvParameters) {
 
 extern "C" void app_main(void)
 {
-    lvgl_mutex = xSemaphoreCreateRecursiveMutex(); // 创建递归锁
 
     printf("enter app_main\n");
 
@@ -121,8 +119,8 @@ extern "C" void app_main(void)
 
     ESP_LOGI(TAG, "4. Create UI...");
     
-    // 获取当前活动屏幕
-    lv_obj_t * scr = lv_screen_active();
+    // // 获取当前活动屏幕
+    // lv_obj_t * scr = lv_screen_active();
     
     start_manual_gif_display(GIF_FILE_PATH);
 
@@ -143,3 +141,4 @@ extern "C" void app_main(void)
     }
 
 }
+
