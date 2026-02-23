@@ -25,7 +25,7 @@
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
 #define DEBUG_MODE 1
 
-#define GIF_FILE_PATH "dog3.gif"
+#define GIF_FILE_PATH "down.gif"
 
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
@@ -99,6 +99,8 @@ void system_monitor_task(void *pvParameters) {
     }
     free(stats_buffer);
 }
+
+
 extern "C" void app_main(void)
 {
     lvgl_mutex = xSemaphoreCreateRecursiveMutex(); // 创建递归锁
@@ -124,7 +126,8 @@ extern "C" void app_main(void)
     
     start_manual_gif_display(GIF_FILE_PATH);
 
-
+    // 核心修改：创建LVGL刷新任务（优先级1，低于解码任务的2）
+    xTaskCreatePinnedToCore(lvgl_refresh_task, "lvgl_refresh", 4096, NULL, 1, NULL, 0);
     ESP_LOGI(TAG, "5. Enter main loop...");
 
  // ▼▼▼ 条件编译区开始 ▼▼▼
@@ -135,15 +138,8 @@ extern "C" void app_main(void)
 
     // 运行 LVGL 任务处理循环
     while (1) {
-        // 处理 LVGL 的绘制、动画和输入事件
-        if (xSemaphoreTakeRecursive(lvgl_mutex, portMAX_DELAY)) {
-            lv_timer_handler();
-            xSemaphoreGiveRecursive(lvgl_mutex);
-        }
-
-
         // 释放 CPU 资源，防止触发看门狗 (Watchdog) 报错
-        vTaskDelay(pdMS_TO_TICKS(10)); 
+        vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 
 }
