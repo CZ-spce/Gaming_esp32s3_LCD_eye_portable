@@ -39,10 +39,11 @@ static lv_image_dsc_t g_gif_dsc;
 static void gif_manual_decode_task(void *arg) {
     const char *filename = (const char *)arg;
     char full_path[64];
-    snprintf(full_path, sizeof(full_path), "/spiffs/%s", filename);
+    snprintf(full_path, sizeof(full_path), "/spiffs/%s", filename);// 拼接文件路径
 
     ESP_LOGI(TAG, "Opening GIF: %s", full_path);
 
+    /* 打开GIF文件并且将文件数据读入file_data   */
     FILE *f = fopen(full_path, "rb");
     if (!f) {
         ESP_LOGE(TAG, "Failed to open file: %s", full_path);
@@ -62,9 +63,12 @@ static void gif_manual_decode_task(void *arg) {
     }
     fread(file_data, 1, f_size, f);
     fclose(f);
+
 #if DEBUG_DECODE_PERF
         ESP_LOGI(TAG, "图片申请的内存%ld字节",f_size);
 #endif
+
+    //解析 GIF 文件数据并创建一个 GIF 解码器实例
     gd_GIF *gif = my_gd_open_gif_buffer(file_data, f_size);
     if (!gif) {
         ESP_LOGE(TAG, "GIF parsing failed");
@@ -76,7 +80,7 @@ static void gif_manual_decode_task(void *arg) {
     while (1) {
         int64_t start_us = esp_timer_get_time();
         
-        int ret = my_gd_get_frame(gif);
+        int ret = my_gd_get_frame(gif); //从 GIF 文件中解码一帧图像，解码后的像素数据存储在 gif->canvas 中
         if (ret == 0) { my_gd_rewind(gif); continue; } 
         else if (ret == -1) break;
 
@@ -96,6 +100,7 @@ static void gif_manual_decode_task(void *arg) {
         // 3. 瞬间同步数据并置标志位
         memcpy(g_gif_display_buf, g_gif_decode_buf, GIF_RES_W * GIF_RES_H * 2);
         has_new_frame = true; // 告诉刷新任务：可以画了！
+        ESP_LOGI(TAG, "New frame decoded and has_new_frame set to TRUE");
 
         // 4. 动态延时控制
         int target_ms = gif->gce.delay * 10;
@@ -140,9 +145,9 @@ void start_manual_gif_display(const char * filename) {
     memset(&g_gif_dsc, 0, sizeof(g_gif_dsc));
     g_gif_dsc.header.w = GIF_RES_W;
     g_gif_dsc.header.h = GIF_RES_H;
-    g_gif_dsc.header.cf = LV_COLOR_FORMAT_RGB565; 
-    g_gif_dsc.data_size = buf_size;
-    g_gif_dsc.data = (const uint8_t *)g_gif_display_buf;
+    g_gif_dsc.header.cf = LV_COLOR_FORMAT_RGB565; //设置颜色格式
+    g_gif_dsc.data_size = buf_size; // 设置图片数据大小
+    g_gif_dsc.data = (const uint8_t *)g_gif_display_buf; //将图像数据指针指向 g_gif_display_buf，即实际存储图像像素数据的缓冲区。
 
     g_gif_img_obj = lv_image_create(lv_screen_active());
     lv_image_set_src(g_gif_img_obj, &g_gif_dsc);
@@ -156,7 +161,9 @@ void start_manual_gif_display(const char * filename) {
 void lvgl_refresh_task(void *arg) {
     while (1) {
         // 只有解码出新的一帧，才允许标记刷新
+
         if (has_new_frame) {
+            ESP_LOGI(TAG, "has_new_frame is TRUE, triggering refresh");
             if (g_gif_img_obj) {
                 lv_obj_invalidate(g_gif_img_obj); 
             }
