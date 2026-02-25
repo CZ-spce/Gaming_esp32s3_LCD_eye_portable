@@ -37,6 +37,22 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 2.6.3
+  espressif/esp_new_jpeg:
+    component_hash: 7c07831bbf11d15f84f42dc0e127094c78063b03d0dce688495773656f998d2b
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    targets:
+    - esp32
+    - esp32s2
+    - esp32s3
+    - esp32p4
+    - esp32c2
+    - esp32c3
+    - esp32c5
+    - esp32c6
+    version: 0.5.1
   idf:
     source:
       type: idf
@@ -51,7 +67,8 @@ dependencies:
 direct_dependencies:
 - espressif/esp_lcd_gc9a01
 - espressif/esp_lvgl_port
+- espressif/esp_new_jpeg
 - lvgl/lvgl
-manifest_hash: 5c99cda24c6cfce75ad2ed5cf06965b31cd0d622c83611343126e66b851cee5b
+manifest_hash: d4833e3ef45799f33c8b09df5f9312968bbfa63a04841754471c3fb8dfbbc040
 target: esp32s3
 version: 2.0.0

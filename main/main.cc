@@ -10,6 +10,10 @@
 // 自定义 GIF 库
 #include "gif_encoder/my_gifdec.h"
 
+//jpeg解码
+#include "jpeg_decoder/my_jpeg_decoder.h"
+#include "esp_jpeg_common.h" 
+
 /* 显示组件 */
 #include "lvgl_UI_display.h"
 #include "LCD_gc9a01/my_gc9a01.h"
@@ -63,8 +67,37 @@ void init_spiffs(void) {
     }
 }
  
+void display_jpeg_on_gc9a01(const char *path)
+{
+    // 1. 记录开始时间
+    int64_t start_time = esp_timer_get_time(); // 单位是微秒 (us)
+
+    uint16_t *buffer = nullptr;
+    int width, height;
+
+    if (decode_jpeg_to_rgb565(path, &buffer, &width, &height) == ESP_OK) {
+        // 调整显示位置（居中）
+        int x_start = (LCD_H_RES - width) / 2;
+        int y_start = (LCD_V_RES - height) / 2;
+        
+        // 2. 记录结束时间并计算耗时
+        int64_t end_time = esp_timer_get_time();
+        int64_t duration_us = end_time - start_time;
+        float duration_ms = duration_us / 1000.0f; // 转换为毫秒
 
 
+                // 直接调用你的刷新函数
+        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);
+
+                // 重要：释放缓冲区
+        jpeg_free_align(buffer);
+
+
+        ESP_LOGI("JPEG", "Displayed %s (%dx%d) in %.2f ms", path, width, height, duration_ms);
+    } else {
+        ESP_LOGE("JPEG", "Failed to decode %s", path);
+    }
+}
 
 void system_monitor_task(void *pvParameters) {
     // 分配两个缓冲区，或者复用一个足够大的
@@ -121,11 +154,13 @@ extern "C" void app_main(void)
     // // 获取当前活动屏幕
     // lv_obj_t * scr = lv_screen_active();
     
-    start_manual_gif_display(GIF_FILE_PATH);
+    // start_manual_gif_display(GIF_FILE_PATH);
 
     // 核心修改：创建LVGL刷新任务（优先级1，低于解码任务的2）
-    xTaskCreatePinnedToCore(lvgl_refresh_task, "lvgl_refresh", 4096, NULL, 1, NULL, 0);
+    // xTaskCreatePinnedToCore(lvgl_refresh_task, "lvgl_refresh", 4096, NULL, 1, NULL, 0);
     ESP_LOGI(TAG, "5. Enter main loop...");
+
+
 
  // ▼▼▼ 条件编译区开始 ▼▼▼
 #if DEBUG_MODE
@@ -136,6 +171,7 @@ extern "C" void app_main(void)
     // 运行 LVGL 任务处理循环
     while (1) {
         // 释放 CPU 资源，防止触发看门狗 (Watchdog) 报错
+        display_jpeg_on_gc9a01("/spiffs/temp_clean.jpeg");
         vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 
