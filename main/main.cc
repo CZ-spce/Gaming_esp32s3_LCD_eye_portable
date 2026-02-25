@@ -23,9 +23,9 @@
 #include "esp_vfs.h"
 
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
-#define GIF_FILE_PATH "angry.gif"
+#define GIF_FILE_PATH "dizzy.gif"
 
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
