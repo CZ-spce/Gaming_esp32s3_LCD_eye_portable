@@ -84,6 +84,8 @@ static void gif_manual_decode_task(void *arg) {
         if (ret == 0) { my_gd_rewind(gif); continue; } 
         else if (ret == -1) break;
 
+        
+
         // 1. 恢复极速指针转换 (写到 decode_buf)
         uint8_t *src = gif->canvas;
         uint16_t *dst = g_gif_decode_buf;
@@ -100,7 +102,7 @@ static void gif_manual_decode_task(void *arg) {
         // 3. 瞬间同步数据并置标志位
         memcpy(g_gif_display_buf, g_gif_decode_buf, GIF_RES_W * GIF_RES_H * 2);
         has_new_frame = true; // 告诉刷新任务：可以画了！
-        ESP_LOGI(TAG, "New frame decoded and has_new_frame set to TRUE");
+        // ESP_LOGI(TAG, "New frame decoded and has_new_frame set to TRUE");
 
         // 4. 动态延时控制
         int target_ms = gif->gce.delay * 10;
@@ -163,7 +165,7 @@ void lvgl_refresh_task(void *arg) {
         // 只有解码出新的一帧，才允许标记刷新
 
         if (has_new_frame) {
-            ESP_LOGI(TAG, "has_new_frame is TRUE, triggering refresh");
+            // ESP_LOGI(TAG, "has_new_frame is TRUE, triggering refresh");
             if (g_gif_img_obj) {
                 lv_obj_invalidate(g_gif_img_obj); 
             }
