@@ -4,7 +4,7 @@
 #include "esp_lcd_panel_io.h"  // 必须引入 IO 层操作
 #include "esp_lcd_panel_ops.h" // 必须引入 Panel 绘制/控制操作
 #include <stdio.h>
-
+#include "esp_log.h"
 // 全局变量
 static esp_lcd_panel_handle_t panel_handle;
 

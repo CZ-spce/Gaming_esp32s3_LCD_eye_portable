@@ -158,16 +158,38 @@ extern "C" void app_main(void)
     // 2. 配置第一个动画 (例如：dizzy.gif 转换来的序列帧)
     AnimationConfig anim1(
         "/spiffs/",        // 基础路径
-        "frame_",          // 文件前缀
+        "normal_",          // 文件前缀
         ".jpg",            // 后缀
         67,                // 总帧数
         50,                // 延时 50ms (约 20FPS，需结合解码时间)
         PlayMode::PLAY_LOOP // 循环播放
     );
 
+     // 2. 配置第二个动画 (例如：dizzy.gif 转换来的序列帧)
+    AnimationConfig anim2(
+        "/spiffs/",        // 基础路径
+        "angry_",          // 文件前缀
+        ".jpg",            // 后缀
+        67,                // 总帧数
+        50,                // 延时 50ms (约 20FPS，需结合解码时间)
+        PlayMode::PLAY_ONCE // 播放一次
+    );
+
+         // 2. 配置第二个动画 (例如：dizzy.gif 转换来的序列帧)
+    AnimationConfig anim3(
+        "/spiffs/",        // 基础路径
+        "like_",          // 文件前缀
+        ".jpg",            // 后缀
+        67,                // 总帧数
+        50,                // 延时 50ms (约 20FPS，需结合解码时间)
+        PlayMode::PLAY_ONCE // 播放一次
+    );
+
+      player->playAnimation(anim1);
+
+
     // 3. 开始播放
     ESP_LOGI("main", "Starting first animation...");
-    player->playAnimation(anim1);
 
  // ▼▼▼ 条件编译区开始 ▼▼▼
 #if DEBUG_MODE
@@ -176,7 +198,10 @@ extern "C" void app_main(void)
 
 
     while (1) {
-     vTaskDelay(pdMS_TO_TICKS(100));
-  
+      vTaskDelay(pdMS_TO_TICKS(7000));
+      player->playAnimation(anim2);
+      vTaskDelay(pdMS_TO_TICKS(12000));
+      player->playAnimation(anim3);
+
     }
 }
