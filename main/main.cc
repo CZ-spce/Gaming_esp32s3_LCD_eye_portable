@@ -13,6 +13,7 @@
 //jpeg解码
 #include "jpeg_decoder/my_jpeg_decoder.h"
 #include "esp_jpeg_common.h" 
+#include "animation_player/AnimationPlayer.h" // 引入新模块
 
 /* 显示组件 */
 #include "lvgl_UI_display.h"
@@ -143,37 +144,39 @@ extern "C" void app_main(void)
     // 1. 初始化文件系统
     ESP_LOGI(TAG, "Initialize spiffs...");
     init_spiffs();
-
-    ESP_LOGI(TAG, "Initialize LVGL...");
-    lv_init();
-    lv_port_disp_init();
-    lvgl_tick_init();
-
-    ESP_LOGI(TAG, "4. Create UI...");
     
-    // // 获取当前活动屏幕
-    // lv_obj_t * scr = lv_screen_active();
+    my_gc9a01_init();
     
-    // start_manual_gif_display(GIF_FILE_PATH);
-
     // 核心修改：创建LVGL刷新任务（优先级1，低于解码任务的2）
     // xTaskCreatePinnedToCore(lvgl_refresh_task, "lvgl_refresh", 4096, NULL, 1, NULL, 0);
-    ESP_LOGI(TAG, "5. Enter main loop...");
+    ESP_LOGI(TAG, "Enter main loop...");
 
+    // 1. 创建并启动动画播放器
+    AnimationPlayer* player = AnimationPlayer::getInstance();
+    player->begin();
 
+    // 2. 配置第一个动画 (例如：dizzy.gif 转换来的序列帧)
+    AnimationConfig anim1(
+        "/spiffs/",        // 基础路径
+        "frame_",          // 文件前缀
+        ".jpg",            // 后缀
+        67,                // 总帧数
+        50,                // 延时 50ms (约 20FPS，需结合解码时间)
+        PlayMode::PLAY_LOOP // 循环播放
+    );
+
+    // 3. 开始播放
+    ESP_LOGI("main", "Starting first animation...");
+    player->playAnimation(anim1);
 
  // ▼▼▼ 条件编译区开始 ▼▼▼
 #if DEBUG_MODE
     xTaskCreate(system_monitor_task, "sys_monitor", 4096, NULL, 1, NULL);
 #endif
-// ▲▲▲ 条件编译区结束 ▲▲▲
 
-    // 运行 LVGL 任务处理循环
+
     while (1) {
-        // 释放 CPU 资源，防止触发看门狗 (Watchdog) 报错
-        display_jpeg_on_gc9a01("/spiffs/temp_clean.jpeg");
-        vTaskDelay(pdMS_TO_TICKS(100)); 
+     vTaskDelay(pdMS_TO_TICKS(100));
+  
     }
-
 }
-

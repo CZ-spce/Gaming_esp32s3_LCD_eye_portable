@@ -62,7 +62,7 @@ esp_err_t decode_jpeg_to_rgb565(const char *path, uint16_t **out_buffer, int *wi
         free(jpeg_data);
         return ESP_FAIL;
     }
-    ESP_LOGI(TAG, "Parsed header: %dx%d, subsampling: ?", header_info.width, header_info.height);
+    // ESP_LOGI(TAG, "Parsed header: %dx%d, subsampling: ?", header_info.width, header_info.height);
     // 注意：esp_new_jpeg 的 header_info 不直接提供采样信息，但尺寸正确说明解析到了 SOF0
 
     *width = header_info.width;
