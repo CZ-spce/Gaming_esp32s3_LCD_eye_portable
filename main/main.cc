@@ -22,6 +22,9 @@
 #include "lvgl.h"
 #include "lvgl_tick_timer.h"
 
+/* 动画播放器 */
+#include "animation_player/AnimationPlayer.h"
+#include "animation_player/AnimationLib.h"
 
 /* 文件系统 */
 #include "esp_spiffs.h"
@@ -67,38 +70,7 @@ void init_spiffs(void) {
         ESP_LOGI("SPIFFS", "Partition size: total: %d, used: %d", total, used);
     }
 }
- 
-// void display_jpeg_on_gc9a01(const char *path)
-// {
-//     // 1. 记录开始时间
-//     int64_t start_time = esp_timer_get_time(); // 单位是微秒 (us)
 
-//     uint16_t *buffer = nullptr;
-//     int width, height;
-
-//     if (decode_jpeg_to_rgb565(path, &buffer, &width, &height) == ESP_OK) {
-//         // 调整显示位置（居中）
-//         int x_start = (LCD_H_RES - width) / 2;
-//         int y_start = (LCD_V_RES - height) / 2;
-        
-//         // 2. 记录结束时间并计算耗时
-//         int64_t end_time = esp_timer_get_time();
-//         int64_t duration_us = end_time - start_time;
-//         float duration_ms = duration_us / 1000.0f; // 转换为毫秒
-
-
-//                 // 直接调用你的刷新函数
-//         my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);
-
-//                 // 重要：释放缓冲区
-//         jpeg_free_align(buffer);
-
-
-//         ESP_LOGI("JPEG", "Displayed %s (%dx%d) in %.2f ms", path, width, height, duration_ms);
-//     } else {
-//         ESP_LOGE("JPEG", "Failed to decode %s", path);
-//     }
-// }
 
 void system_monitor_task(void *pvParameters) {
     // 分配两个缓冲区，或者复用一个足够大的
@@ -147,49 +119,17 @@ extern "C" void app_main(void)
     
     my_gc9a01_init();
     
-    // 核心修改：创建LVGL刷新任务（优先级1，低于解码任务的2）
-    // xTaskCreatePinnedToCore(lvgl_refresh_task, "lvgl_refresh", 4096, NULL, 1, NULL, 0);
-    ESP_LOGI(TAG, "Enter main loop...");
-
-    // 1. 创建并启动动画播放器
+// 创建并启动动画播放器
     AnimationPlayer* player = AnimationPlayer::getInstance();
     player->begin();
 
-    // 2. 配置第一个动画 (例如：dizzy.gif 转换来的序列帧)
-    AnimationConfig anim1(
-        "/spiffs/",        // 基础路径
-        "normal_",          // 文件前缀
-        ".jpg",            // 后缀
-        67,                // 总帧数
-        50,                // 延时 50ms (约 20FPS，需结合解码时间)
-        PlayMode::PLAY_LOOP // 循环播放
-    );
-
-     // 2. 配置第二个动画 (例如：dizzy.gif 转换来的序列帧)
-    AnimationConfig anim2(
-        "/spiffs/",        // 基础路径
-        "angry_",          // 文件前缀
-        ".jpg",            // 后缀
-        67,                // 总帧数
-        50,                // 延时 50ms (约 20FPS，需结合解码时间)
-        PlayMode::PLAY_ONCE // 播放一次
-    );
-
-         // 2. 配置第二个动画 (例如：dizzy.gif 转换来的序列帧)
-    AnimationConfig anim3(
-        "/spiffs/",        // 基础路径
-        "like_",          // 文件前缀
-        ".jpg",            // 后缀
-        67,                // 总帧数
-        50,                // 延时 50ms (约 20FPS，需结合解码时间)
-        PlayMode::PLAY_ONCE // 播放一次
-    );
-
-    player->playAnimation(anim1);
+     
 
 
     // 3. 开始播放
     ESP_LOGI("main", "Starting first animation...");
+
+    
 
  // ▼▼▼ 条件编译区开始 ▼▼▼
 #if DEBUG_MODE
@@ -198,9 +138,11 @@ extern "C" void app_main(void)
 
 
     while (1) {
+
       vTaskDelay(pdMS_TO_TICKS(4000));
-      player->switchAnimation(anim2);
+      player->switchAnimation(angry_b);
       vTaskDelay(pdMS_TO_TICKS(4000));
-      player->switchAnimation(anim3);
+      player->switchAnimation(angry_g);
+
     }
 }

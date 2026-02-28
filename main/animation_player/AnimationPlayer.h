@@ -21,7 +21,6 @@ enum class PlayerCommand {
     CMD_SWITCH_ANIMATION
 };
 
-// 动画配置结构体
 struct AnimationConfig {
     std::string base_path;      // 基础路径，例如 "/spiffs/"
     std::string file_prefix;    // 文件前缀，例如 "frame_"
@@ -107,3 +106,92 @@ private:
     //   - 通过 getInstance() 初始化和访问
     //   - 确保整个系统只有一个动画播放器实例
 };
+
+
+// /*  下面是添加了性别区别的版本 */
+// #pragma once
+
+// #include <string>
+// #include <freertos/FreeRTOS.h>
+// #include <freertos/task.h>
+// #include <freertos/queue.h>
+
+// // 定义性别枚举，比用字符更安全
+// enum class Gender {
+//     MALE,   // 对应 'b' (boy)
+//     FEMALE  // 对应 'g' (girl)
+// };
+
+// // 播放模式
+// enum class PlayMode {
+//     PLAY_ONCE,
+//     PLAY_LOOP
+// };
+
+// // 命令枚举
+// enum class PlayerCommand {
+//     CMD_STOP,
+//     CMD_PLAY,
+//     CMD_SWITCH_ANIMATION
+// };
+
+// struct AnimationConfig {
+//     std::string anim_name;      // 动画名称，如 "angry", "like", "blink"
+//     Gender gender;              // 性别
+//     int total_frames;           // 总帧数 (可以在加载时自动探测，或者预设)
+//     int delay_ms;               // 帧延时
+//     PlayMode mode;              // 播放模式
+    
+//     // 辅助函数：根据名称和性别自动生成文件前缀 (如 "angry_b_")
+//     std::string getPrefix() const {
+//         char g_char = (gender == Gender::MALE) ? 'b' : 'g';
+//         return anim_name + "_" + g_char + "_";
+//     }
+    
+//     // 基础路径 (SPIFFS 根目录通常是 "/spiffs" 或 "/")
+//     std::string base_path; 
+// };
+
+// class AnimationPlayer {
+// public:
+//     AnimationPlayer();
+//     ~AnimationPlayer();
+
+//     // 初始化
+//     void begin(const std::string& spiffs_root = "/spiffs");
+
+//     // 【核心修改】新的切换接口
+//     // 参数：动画名 (如 "angry"), 性别, 帧延时, 是否循环
+//     void switchAnimation(const std::string& anim_name, Gender gender, int delay_ms = 100, PlayMode mode = PlayMode::PLAY_LOOP);
+    
+//     // 便捷函数：仅切换当前动画的性别 (保持动作不变)
+//     void toggleGender(); 
+
+//     // 停止播放
+//     void stop();
+
+// private:
+//     // FreeRTOS 任务
+//     static void playerTask(void* pvParameters);
+    
+//     // 显示单帧 (内部使用完整路径)
+//     bool displayFrame(const std::string& full_path);
+    
+//     // 探测帧数 (可选：如果不想硬编码总帧数，可以写一个简单的文件存在性检查)
+//     int detectFrameCount(const std::string& prefix);
+
+//     // 成员变量
+//     TaskHandle_t m_task_handle;
+//     QueueHandle_t m_cmd_queue;
+    
+//     AnimationConfig m_current_config;
+//     AnimationConfig m_pending_config;
+    
+//     bool m_is_playing;
+//     bool m_should_stop;
+//     bool m_has_new_animation;
+
+//     // 简单的互斥锁保护配置读写 (可选，如果只在任务内写则不需要，但为了安全建议加上)
+//     // 这里简化处理，依靠队列串行化命令
+// };
+
