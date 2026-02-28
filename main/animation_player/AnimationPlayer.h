@@ -6,7 +6,12 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-
+// 性别模式枚举
+enum class GenderMode {
+    MEN,      
+    WOMEN,
+    Genderless
+};
 
 // 播放模式枚举
 enum class PlayMode {
@@ -56,7 +61,9 @@ public:
     void playAnimation(const AnimationConfig& config);
     void stop();
     void switchAnimation(const AnimationConfig& config);
-    
+    void switchGenderAnimation(void);
+    void setGenderAnimation(GenderMode gender);
+
     // 获取当前状态
     bool isPlaying() const { return m_is_playing; }
 
@@ -71,6 +78,13 @@ private:
     TaskHandle_t m_task_handle;  // 保存 FreeRTOS 动画播放任务的句柄，可用于后续控制（如挂起/删除），
     QueueHandle_t m_cmd_queue;   //FreeRTOS 队列句柄，用于主线程向播放任务发送控制命令（如播放/停止）。
     
+    GenderMode current_gender;  
+    //当前性别
+
+    bool gender_switch;  
+    // 性别切换标志位
+
+
     // 当前动画配置
     AnimationConfig m_current_config;
     // ▶ 当前正在播放（或即将播放）的动画参数。

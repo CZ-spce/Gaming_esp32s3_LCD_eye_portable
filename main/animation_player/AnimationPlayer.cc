@@ -40,9 +40,12 @@ AnimationPlayer* AnimationPlayer::getInstance() {
 AnimationPlayer::AnimationPlayer() 
     : m_task_handle(nullptr), 
       m_cmd_queue(nullptr),
+      current_gender(GenderMode::MEN), 
+      gender_switch(false), 
       m_is_playing(false),
       m_should_stop(false),
-      m_has_new_animation(false) {
+      m_has_new_animation(false)
+      {
 }
 
 //创建队列和任务
@@ -85,6 +88,17 @@ void AnimationPlayer::switchAnimation(const AnimationConfig& config) {
     xQueueSend(m_cmd_queue, &cmd, portMAX_DELAY);
 }
 
+
+//性别切换函数
+void AnimationPlayer::switchGenderAnimation(void) {
+    gender_switch=true;
+}
+
+//性别设置函数
+void AnimationPlayer::setGenderAnimation(GenderMode gender){
+   current_gender = gender;
+}
+
 //底层解码和播放
 bool AnimationPlayer::displayFrame(const std::string& path) {
     uint16_t* buffer = nullptr;
@@ -100,8 +114,7 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
     if (decode_jpeg_to_rgb565(path.c_str(), &buffer, &width, &height) == ESP_OK) {
         int x_start = (LCD_H_RES - width) / 2;
         int y_start = (LCD_V_RES - height) / 2;
-        int x_end = x_start + width;
-        int y_end = y_start + height;
+
 #if AnimationPlayer_DEBUG_MODE
     // 2. 记录结束时间并计算耗时
         int64_t end_time = esp_timer_get_time();
@@ -134,6 +147,17 @@ void AnimationPlayer::playerTask(void* pvParameters) {
     PlayerCommand cmd;
     
     while (true) {
+
+        static char *current_gernder_alphabet;
+        current_gernder_alphabet=&player->m_pending_config.file_prefix[player->m_pending_config.file_prefix.length() - 2];
+        if(player->current_gender==GenderMode::MEN &&  *current_gernder_alphabet=='g')
+        {
+            *current_gernder_alphabet='b';
+        }else if(player->current_gender==GenderMode::WOMEN  &&  *current_gernder_alphabet=='b')
+        {
+            *current_gernder_alphabet='g';
+        }
+
         // 1. 检查是否有新命令
         if (xQueueReceive(player->m_cmd_queue, &cmd, pdMS_TO_TICKS(10)) == pdTRUE) {
             if (cmd == PlayerCommand::CMD_STOP) {
@@ -154,15 +178,26 @@ void AnimationPlayer::playerTask(void* pvParameters) {
                 }
             }
         }
-
+        
         // 2. 如果正在播放，执行帧循环
         if (player->m_is_playing && !player->m_should_stop) {
             for (int i = 0; i < player->m_current_config.total_frames; ++i) {
-                // 再次检查是否被中断
-                // if (player->m_should_stop) break;
 
                if (player->m_should_stop || player->m_has_new_animation) break;
-
+               if (player->gender_switch==true) {
+                   ESP_LOGI(TAG, "gender_switch:%d",player->gender_switch);
+                   player->gender_switch=false;
+                   if(player->current_gender!=GenderMode::Genderless)
+                   {
+                        // 使用三元运算符手动切换-如果当前是男性，就变成女性；否则（如果是女性），就变成男性。
+                        player->current_gender = (player->current_gender == GenderMode::MEN) 
+                                                ? GenderMode::WOMEN 
+                                                : GenderMode::MEN;
+                   }
+                   ESP_LOGI(TAG, "gender_switch:%d",player->gender_switch);
+                   break;
+                }
+                ESP_LOGI(TAG, "star jpeg_decoder...");
 
                 // 动态生成文件名
                 char path_buf[128];
