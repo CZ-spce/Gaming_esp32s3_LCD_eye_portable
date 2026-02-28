@@ -68,37 +68,37 @@ void init_spiffs(void) {
     }
 }
  
-void display_jpeg_on_gc9a01(const char *path)
-{
-    // 1. 记录开始时间
-    int64_t start_time = esp_timer_get_time(); // 单位是微秒 (us)
+// void display_jpeg_on_gc9a01(const char *path)
+// {
+//     // 1. 记录开始时间
+//     int64_t start_time = esp_timer_get_time(); // 单位是微秒 (us)
 
-    uint16_t *buffer = nullptr;
-    int width, height;
+//     uint16_t *buffer = nullptr;
+//     int width, height;
 
-    if (decode_jpeg_to_rgb565(path, &buffer, &width, &height) == ESP_OK) {
-        // 调整显示位置（居中）
-        int x_start = (LCD_H_RES - width) / 2;
-        int y_start = (LCD_V_RES - height) / 2;
+//     if (decode_jpeg_to_rgb565(path, &buffer, &width, &height) == ESP_OK) {
+//         // 调整显示位置（居中）
+//         int x_start = (LCD_H_RES - width) / 2;
+//         int y_start = (LCD_V_RES - height) / 2;
         
-        // 2. 记录结束时间并计算耗时
-        int64_t end_time = esp_timer_get_time();
-        int64_t duration_us = end_time - start_time;
-        float duration_ms = duration_us / 1000.0f; // 转换为毫秒
+//         // 2. 记录结束时间并计算耗时
+//         int64_t end_time = esp_timer_get_time();
+//         int64_t duration_us = end_time - start_time;
+//         float duration_ms = duration_us / 1000.0f; // 转换为毫秒
 
 
-                // 直接调用你的刷新函数
-        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);
+//                 // 直接调用你的刷新函数
+//         my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);
 
-                // 重要：释放缓冲区
-        jpeg_free_align(buffer);
+//                 // 重要：释放缓冲区
+//         jpeg_free_align(buffer);
 
 
-        ESP_LOGI("JPEG", "Displayed %s (%dx%d) in %.2f ms", path, width, height, duration_ms);
-    } else {
-        ESP_LOGE("JPEG", "Failed to decode %s", path);
-    }
-}
+//         ESP_LOGI("JPEG", "Displayed %s (%dx%d) in %.2f ms", path, width, height, duration_ms);
+//     } else {
+//         ESP_LOGE("JPEG", "Failed to decode %s", path);
+//     }
+// }
 
 void system_monitor_task(void *pvParameters) {
     // 分配两个缓冲区，或者复用一个足够大的
@@ -185,7 +185,7 @@ extern "C" void app_main(void)
         PlayMode::PLAY_ONCE // 播放一次
     );
 
-      player->playAnimation(anim1);
+    player->playAnimation(anim1);
 
 
     // 3. 开始播放
@@ -198,10 +198,9 @@ extern "C" void app_main(void)
 
 
     while (1) {
-      vTaskDelay(pdMS_TO_TICKS(7000));
-      player->playAnimation(anim2);
-      vTaskDelay(pdMS_TO_TICKS(12000));
-      player->playAnimation(anim3);
-
+      vTaskDelay(pdMS_TO_TICKS(4000));
+      player->switchAnimation(anim2);
+      vTaskDelay(pdMS_TO_TICKS(4000));
+      player->switchAnimation(anim3);
     }
 }
