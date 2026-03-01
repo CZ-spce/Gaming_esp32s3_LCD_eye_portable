@@ -9,6 +9,7 @@
 //调试开始宏
 #define AnimationPlayer_DEBUG_MODE 0
 
+#define AnimationPlayer_gender_MODE 0 //性别模式，选择是否衔接播放 ，0代表衔接
 
 // 引入你原有的 C 语言解码函数声明
 // 假设这些函数在 jpeg_decoder/my_jpeg_decoder.h 和 LCD_gc9a01/my_gc9a01.h 中
@@ -89,9 +90,27 @@ void AnimationPlayer::switchAnimation(const AnimationConfig& config) {
 }
 
 
-//性别切换函数
+// 性别切换并重新触发播放
 void AnimationPlayer::switchGenderAnimation(void) {
-    gender_switch=true;
+    // 1. 切换性别枚举
+    if(current_gender != GenderMode::Genderless) {
+        current_gender = (current_gender == GenderMode::MEN) ? GenderMode::WOMEN : GenderMode::MEN;
+    }
+
+    // 2. 将当前配置复制给待处理配置，假装我们收到了一个“新”的动画请求
+    m_pending_config = m_current_config;
+
+
+#if AnimationPlayer_gender_MODE
+    m_has_new_animation = true;
+#endif
+    
+
+    // 3. 必须发送队列命令，唤醒 playerTask 重新加载配置
+    if (m_cmd_queue != nullptr) {
+        PlayerCommand cmd = PlayerCommand::CMD_SWITCH_ANIMATION;
+        xQueueSend(m_cmd_queue, &cmd, 0); 
+    }
 }
 
 //性别设置函数
@@ -146,21 +165,15 @@ void AnimationPlayer::playerTask(void* pvParameters) {
     AnimationPlayer* player = (AnimationPlayer*)pvParameters;
     PlayerCommand cmd;
     
+    static char *current_gernder_alphabet;
     while (true) {
 
-        static char *current_gernder_alphabet;
-        current_gernder_alphabet=&player->m_pending_config.file_prefix[player->m_pending_config.file_prefix.length() - 2];
-        if(player->current_gender==GenderMode::MEN &&  *current_gernder_alphabet=='g')
-        {
-            *current_gernder_alphabet='b';
-        }else if(player->current_gender==GenderMode::WOMEN  &&  *current_gernder_alphabet=='b')
-        {
-            *current_gernder_alphabet='g';
-        }
+        
+
 
         // 1. 检查是否有新命令
         if (xQueueReceive(player->m_cmd_queue, &cmd, pdMS_TO_TICKS(10)) == pdTRUE) {
-            if (cmd == PlayerCommand::CMD_STOP) {
+            if (cmd == PlayerCommand::CMD_STOP) { 
                 player->m_is_playing = false;
                 player->m_should_stop = true;
                 ESP_LOGI(TAG, "Stop command received");
@@ -172,9 +185,9 @@ void AnimationPlayer::playerTask(void* pvParameters) {
                     player->m_is_playing = true;
                     player->m_should_stop = false;
                     player->m_has_new_animation = false;
-                    ESP_LOGI(TAG, "Animation loaded: %s (%d frames)", 
-                             player->m_current_config.file_prefix.c_str(), 
-                             player->m_current_config.total_frames);
+                    // ESP_LOGI(TAG, "Animation loaded: %s (%d frames)", 
+                    //          player->m_current_config.file_prefix.c_str(), 
+                    //          player->m_current_config.total_frames);
                 }
             }
         }
@@ -184,23 +197,27 @@ void AnimationPlayer::playerTask(void* pvParameters) {
             for (int i = 0; i < player->m_current_config.total_frames; ++i) {
 
                if (player->m_should_stop || player->m_has_new_animation) break;
-               if (player->gender_switch==true) {
-                   ESP_LOGI(TAG, "gender_switch:%d",player->gender_switch);
-                   player->gender_switch=false;
-                   if(player->current_gender!=GenderMode::Genderless)
-                   {
-                        // 使用三元运算符手动切换-如果当前是男性，就变成女性；否则（如果是女性），就变成男性。
-                        player->current_gender = (player->current_gender == GenderMode::MEN) 
-                                                ? GenderMode::WOMEN 
-                                                : GenderMode::MEN;
-                   }
-                   ESP_LOGI(TAG, "gender_switch:%d",player->gender_switch);
-                   break;
-                }
+
                 ESP_LOGI(TAG, "star jpeg_decoder...");
 
                 // 动态生成文件名
                 char path_buf[128];
+
+                current_gernder_alphabet=&player->m_current_config.file_prefix[player->m_current_config.file_prefix.length() - 2];
+                if(player->current_gender==GenderMode::MEN &&  *current_gernder_alphabet=='g')
+                {
+                    *current_gernder_alphabet='b';
+                }else if(player->current_gender==GenderMode::WOMEN  &&  *current_gernder_alphabet=='b')
+                {
+                    *current_gernder_alphabet='g';
+                }
+                
+#if AnimationPlayer_DEBUG_MODE
+                ESP_LOGI(TAG, "name:%s", player->m_current_config.file_prefix.c_str());
+                ESP_LOGI(TAG, "current gender: %d", static_cast<int>(player->current_gender));
+#endif
+                
+
                 snprintf(path_buf, sizeof(path_buf), "%s%s%04d%s", 
                          player->m_current_config.base_path.c_str(),
                          player->m_current_config.file_prefix.c_str(),

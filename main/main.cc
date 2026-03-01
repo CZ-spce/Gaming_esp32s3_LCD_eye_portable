@@ -42,7 +42,7 @@ static const char *T_TAG = "SYS_MONITOR";
 
 // ✅ 配置按键引脚 (ESP32-S3 Eye 板载按键通常是 GPIO0)
 // 如果您的按键接在其他引脚，请修改这里
-#define BUTTON_GPIO       GPIO_NUM_4
+#define BUTTON_GPIO       GPIO_NUM_6
 #define BUTTON_ACTIVE_LEVEL 0  // 0: 低电平有效 (按下接地), 1: 高电平有效
 
 
@@ -177,6 +177,7 @@ extern "C" void app_main(void)
 // 创建并启动动画播放器
     AnimationPlayer* player = AnimationPlayer::getInstance();
     player->begin();
+    angry.mode = PlayMode::PLAY_LOOP;
     player->switchAnimation(angry);
     // player->setGenderAnimation(GenderMode::WOMEN);
     
@@ -194,14 +195,13 @@ extern "C" void app_main(void)
 
     while (1) {
       // ✅ 检测按键是否被按下
-        if (check_button_press()) {
+        if (gpio_get_level(BUTTON_GPIO) == BUTTON_ACTIVE_LEVEL) {
             ESP_LOGI(TAG, "🔘 Button Pressed! Switching gender...");
             
             // 调用切换性别函数
             player->switchGenderAnimation();
+            vTaskDelay(pdMS_TO_TICKS(1000));
             
-            // 可选：添加一点延时，防止一次物理按压触发多次逻辑 (虽然去抖动已处理，但这是双重保险)
-            vTaskDelay(pdMS_TO_TICKS(200));
         }
         
         // 让出 CPU 时间片，避免看门狗复位 (WDT Reset)
