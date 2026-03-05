@@ -40,9 +40,6 @@ static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
 
 
-// ✅ 配置按键引脚 (ESP32-S3 Eye 板载按键通常是 GPIO0)
-// 如果您的按键接在其他引脚，请修改这里
-#define BUTTON_GPIO       GPIO_NUM_6
 #define BUTTON_ACTIVE_LEVEL 0  // 0: 低电平有效 (按下接地), 1: 高电平有效
 
 
@@ -120,40 +117,13 @@ void button_init(void) {
     // 设置为输入模式
     io_conf.mode = GPIO_MODE_INPUT;
     // 设置引脚
-    io_conf.pin_bit_mask = (1ULL << BUTTON_GPIO);
+    io_conf.pin_bit_mask = (1ULL << GPIO_NUM_6) | (1ULL << GPIO_NUM_7);
     // 启用上拉电阻 (防止悬空误触，如果是低电平有效按键)
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     
     gpio_config(&io_conf);
-    ESP_LOGI(TAG, "Button initialized on GPIO%d", BUTTON_GPIO);
-}
-// ✅ 新增：简单的按键检测函数 (带去抖动)
-// 返回 true 表示检测到一次有效的按下动作
-bool check_button_press(void) {
-    static bool last_state = true; // 假设初始为未按下 (高电平)
-    static uint32_t press_time = 0;
-    
-    bool current_state = (gpio_get_level(BUTTON_GPIO) == BUTTON_ACTIVE_LEVEL);
-    
-    // 如果当前是按下状态
-    if (current_state) {
-        // 如果之前是松开状态，记录时间
-        if (last_state == false) {
-            press_time = esp_timer_get_time(); // 记录按下时刻 (微秒)
-        }
-        
-        // 检查是否持续按下了足够长的时间 (去抖动，例如 20ms = 20000us)
-        if ((esp_timer_get_time() - press_time) > 20000) {
-            last_state = true;
-            return true; // 确认是一次有效按下
-        }
-    } else {
-        // 松开了
-        last_state = false;
-    }
-    
-    return false;
+    ESP_LOGI(TAG, "Button initialized on GPIO%d and GPIO%d", GPIO_NUM_6,GPIO_NUM_7);
 }
 
 extern "C" void app_main(void)
@@ -177,8 +147,7 @@ extern "C" void app_main(void)
 // 创建并启动动画播放器
     AnimationPlayer* player = AnimationPlayer::getInstance();
     player->begin();
-    angry.mode = PlayMode::PLAY_LOOP;
-    player->switchAnimation(angry);
+    player->switchAnimation(like);
     // player->setGenderAnimation(GenderMode::WOMEN);
     
      
@@ -195,11 +164,18 @@ extern "C" void app_main(void)
 
     while (1) {
       // ✅ 检测按键是否被按下
-        if (gpio_get_level(BUTTON_GPIO) == BUTTON_ACTIVE_LEVEL) {
-            ESP_LOGI(TAG, "🔘 Button Pressed! Switching gender...");
+        if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
+            ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
             
             // 调用切换性别函数
             player->switchGenderAnimation();
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            
+        }
+        else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
+            ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
+            
+            player->switchAnimation(blink);
             vTaskDelay(pdMS_TO_TICKS(1000));
             
         }

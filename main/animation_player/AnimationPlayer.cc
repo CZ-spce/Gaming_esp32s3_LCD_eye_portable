@@ -7,7 +7,7 @@
 #include "esp_jpeg_common.h" 
 
 //调试开始宏
-#define AnimationPlayer_DEBUG_MODE 0
+#define AnimationPlayer_DEBUG_MODE 1
 
 #define AnimationPlayer_gender_MODE 0 //性别模式，选择是否衔接播放 ，0代表衔接
 
@@ -197,9 +197,7 @@ void AnimationPlayer::playerTask(void* pvParameters) {
             for (int i = 0; i < player->m_current_config.total_frames; ++i) {
 
                if (player->m_should_stop || player->m_has_new_animation) break;
-
-                ESP_LOGI(TAG, "star jpeg_decoder...");
-
+               
                 // 动态生成文件名
                 char path_buf[128];
 
@@ -216,14 +214,16 @@ void AnimationPlayer::playerTask(void* pvParameters) {
                 ESP_LOGI(TAG, "name:%s", player->m_current_config.file_prefix.c_str());
                 ESP_LOGI(TAG, "current gender: %d", static_cast<int>(player->current_gender));
 #endif
-                
-
+            
                 snprintf(path_buf, sizeof(path_buf), "%s%s%04d%s", 
                          player->m_current_config.base_path.c_str(),
                          player->m_current_config.file_prefix.c_str(),
                          i,
                          player->m_current_config.file_suffix.c_str());
                 
+#if AnimationPlayer_DEBUG_MODE
+                ESP_LOGI(TAG, "star jpeg_decoder...");
+#endif
                 // 显示帧
                 player->displayFrame(std::string(path_buf));
                 
