@@ -6,10 +6,12 @@ idf_component_register(SRCS "main.cc"
                             "gif_encoder/my_gifdec.cc"
                             "jpeg_decoder/my_jpeg_decoder.c"
                             "animation_player/AnimationPlayer.cc"
+                            "LCD_ST7735/my_ST7735.c"
                     PRIV_REQUIRES spi_flash
                     PRIV_REQUIRES spi_flash spiffs  # 添加 spiffs 依赖
                     INCLUDE_DIRS "LCD_gc9a01"  
                                  "my_lvgl"
                                  "."
                     REQUIRES lvgl # 把 LVGL 链接进来
+                    REQUIRES teriyakigod__esp_lcd_st7735
                     )

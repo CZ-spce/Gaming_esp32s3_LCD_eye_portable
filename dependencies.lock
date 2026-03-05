@@ -64,11 +64,19 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 9.2.2
+  teriyakigod/esp_lcd_st7735:
+    component_hash: 5c61377ee7a5bbccb40a629c2db9c1918ce1645beb2732c007934c52bc1be2a1
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.0.1
 direct_dependencies:
 - espressif/esp_lcd_gc9a01
 - espressif/esp_lvgl_port
 - espressif/esp_new_jpeg
 - lvgl/lvgl
-manifest_hash: d4833e3ef45799f33c8b09df5f9312968bbfa63a04841754471c3fb8dfbbc040
+- teriyakigod/esp_lcd_st7735
+manifest_hash: 415176e8cb37fd774b85da5d2ed6f0535a6e1ec93035a41c049b06b7eaf851fc
 target: esp32s3
 version: 2.0.0
