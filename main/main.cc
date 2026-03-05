@@ -142,16 +142,28 @@ extern "C" void app_main(void)
     init_spiffs();
     
     // my_gc9a01_init();
+
+    // // 1. 初始化屏幕
+    // st7735_init();
+
+    // // 2. 清屏
+    // st7735_fill_color(BLACK);
+    // vTaskDelay(pdMS_TO_TICKS(500));
+
+    // // 3. 显示全屏红色
+    // st7735_fill_color(RED);
+    // vTaskDelay(pdMS_TO_TICKS(500));
+
     ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
     vTaskDelay(pdMS_TO_TICKS(100));
-    // 2. 执行色彩测试 (替代掉你之前的全红刷屏代码)
-    // st7735_test_pattern(lcd_handle);
-    uint16_t *white_buf = (uint16_t *)malloc(128 * 128 * 2);
-    memset(white_buf, 0xFF, 128 * 128 * 2); // 填满白色
-    my_st7735_draw_bitmap(lcd_handle, 0, 0, 128, 128, white_buf);
+    //2. 执行色彩测试 (替代掉你之前的全红刷屏代码)
+    st7735_test_pattern(lcd_handle);
+    // uint16_t *white_buf = (uint16_t *)malloc(128 * 128 * 2);
+    // memset(white_buf, 0xFF, 128 * 128 * 2); // 填满白色
+    // my_st7735_draw_bitmap(lcd_handle, 0, 0, 128, 128, white_buf);
 
     // ✅ 3. 初始化按键
-    button_init();
+    // button_init();
 
 
 // // 创建并启动动画播放器
@@ -173,6 +185,16 @@ extern "C" void app_main(void)
 
 
     while (1) {
+
+        // ESP_LOGI("MAIN", "Running Page 1");
+        // TFT_Page_1();
+        // vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // ESP_LOGI("MAIN", "Running Border");
+        // TFT_Page_border();
+        // vTaskDelay(pdMS_TO_TICKS(2000));
+
+
     //   // ✅ 检测按键是否被按下
     //     if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
     //         ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");

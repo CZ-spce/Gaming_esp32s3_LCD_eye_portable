@@ -13,5 +13,6 @@ idf_component_register(SRCS "main.cc"
                                  "my_lvgl"
                                  "."
                     REQUIRES lvgl # 把 LVGL 链接进来
-                    REQUIRES teriyakigod__esp_lcd_st7735
+                    REQUIRES esp_lcd driver
+
                     )

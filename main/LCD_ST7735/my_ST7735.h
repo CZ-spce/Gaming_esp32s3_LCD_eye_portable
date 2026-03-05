@@ -17,7 +17,7 @@ extern "C" {
 #define ST7735_PIN_NUM_CS   21
 #define ST7735_PIN_NUM_DC   40
 #define ST7735_PIN_NUM_RST  5
-#define ST7735_PIN_NUM_BCKL -1
+#define ST7735_PIN_NUM_BCKL 7
 
 
 
@@ -83,6 +83,5 @@ esp_err_t my_st7735_set_backlight(my_st7735_handle_t handle, bool on);
 #ifdef __cplusplus
 }
 #endif
-
 
 
