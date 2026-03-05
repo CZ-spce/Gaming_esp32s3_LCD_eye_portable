@@ -131,6 +131,7 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
     // 调用原有的 C 函数解码
     // 注意：确保 decode_jpeg_to_rgb565 在你的工程中是可链接的
     if (decode_jpeg_to_rgb565(path.c_str(), &buffer, &width, &height) == ESP_OK) {
+        //进行居中绘图
         int x_start = (LCD_H_RES - width) / 2;
         int y_start = (LCD_V_RES - height) / 2;
 
@@ -142,7 +143,7 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
 #endif
 
         // 调用原有的绘图函数
-        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);
+        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
 
         // 释放内存
         jpeg_free_align(buffer);
@@ -197,7 +198,7 @@ void AnimationPlayer::playerTask(void* pvParameters) {
             for (int i = 0; i < player->m_current_config.total_frames; ++i) {
 
                if (player->m_should_stop || player->m_has_new_animation) break;
-               
+
                 // 动态生成文件名
                 char path_buf[128];
 
