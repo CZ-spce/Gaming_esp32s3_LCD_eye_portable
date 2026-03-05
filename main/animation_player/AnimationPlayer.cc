@@ -5,6 +5,7 @@
 #include <cstring>
 #include "jpeg_decoder/my_jpeg_decoder.h"
 #include "esp_jpeg_common.h" 
+#include "LCD_ST7735/my_ST7735.h"
 
 //调试开始宏
 #define AnimationPlayer_DEBUG_MODE 1
@@ -143,8 +144,8 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
 #endif
 
         // 调用原有的绘图函数
-        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
-
+        // my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
+        st7735_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
         // 释放内存
         jpeg_free_align(buffer);
 

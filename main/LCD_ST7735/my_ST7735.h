@@ -17,7 +17,7 @@ extern "C" {
 #define ST7735_PIN_NUM_CS   21
 #define ST7735_PIN_NUM_DC   40
 #define ST7735_PIN_NUM_RST  5
-#define ST7735_PIN_NUM_BCKL 7
+#define ST7735_PIN_NUM_BCKL -1
 
 
 
@@ -79,6 +79,8 @@ esp_err_t my_st7735_draw_bitmap(my_st7735_handle_t handle, int x_start, int y_st
  * @return esp_err_t 
  */
 esp_err_t my_st7735_set_backlight(my_st7735_handle_t handle, bool on);
+
+void st7735_draw_bitmap(int x_start, int y_start, int x_end, int y_end, const void *color_data);
 
 #ifdef __cplusplus
 }
