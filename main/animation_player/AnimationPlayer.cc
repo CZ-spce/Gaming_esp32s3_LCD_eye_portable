@@ -140,6 +140,9 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
         //进行居中绘图
         int x_start = (AnimationPlayer_LCD_H_RES - width) / 2;
         int y_start = (AnimationPlayer_LCD_W_RES - height) / 2;
+        uint16_t pixel = buffer[0];
+        ESP_LOGI("TEST", "pixel = 0x%04X, bytes: [0x%02X, 0x%02X]", 
+         pixel, ((uint8_t*)&pixel)[0], ((uint8_t*)&pixel)[1]);
 
 #if AnimationPlayer_DEBUG_MODE
     // 2. 记录结束时间并计算耗时

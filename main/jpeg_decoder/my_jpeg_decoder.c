@@ -33,7 +33,7 @@ esp_err_t decode_jpeg_to_rgb565(const char *path, uint16_t **out_buffer, int *wi
 
     // 2. 配置解码器
     jpeg_dec_config_t config = DEFAULT_JPEG_DEC_CONFIG();
-    config.output_type = JPEG_PIXEL_FORMAT_RGB565_BE; // GC9A01 通常用小端 RGB565
+    config.output_type = JPEG_PIXEL_FORMAT_RGB565_BE; //大端
 
     jpeg_dec_handle_t decoder;
     esp_err_t ret = jpeg_dec_open(&config, &decoder);
