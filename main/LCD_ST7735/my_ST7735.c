@@ -126,20 +126,21 @@ void st7735_test_pattern(my_st7735_handle_t handle) {
 
     ESP_LOGI("TEST", "Drawing color bands...");
 
-    // // 定义四种测试颜色 (RGB565)
-    // uint16_t test_colors[] = {
-    //     0xF800, // 红色 (Red)
-    //     0x07E0, // 绿色 (Green)
-    //     0x001F, // 蓝色 (Blue)
-    //     0xFFFF  // 白色 (White)
-    // };
-    // 解决 ESP32 内存小端模式与 SPI 大端传输的字节序反转问题
+    // 定义四种测试颜色 (RGB565)
     uint16_t test_colors[] = {
-        0x00F8, // 红色 (原 0xF800 高低字节交换)
-        0xE007, // 绿色 (原 0x07E0 高低字节交换)
-        0x1F00, // 蓝色 (原 0x001F 高低字节交换)
-        0xFFFF  // 白色
+        0xF800, // 红色 (Red)
+        0x07E0, // 绿色 (Green)
+        0x001F, // 蓝色 (Blue)
+        0xFFFF  // 白色 (White)
     };
+
+    // // 解决 ESP32 内存小端模式与 SPI 大端传输的字节序反转问题
+    // uint16_t test_colors[] = {
+    //     0x00F8, // 红色 (原 0xF800 高低字节交换)
+    //     0xE007, // 绿色 (原 0x07E0 高低字节交换)
+    //     0x1F00, // 蓝色 (原 0x001F 高低字节交换)
+    //     0xFFFF  // 白色
+    // };
 
     for (int i = 0; i < 4; i++) {
         // 填充颜色行缓冲区

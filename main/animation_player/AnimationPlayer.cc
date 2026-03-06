@@ -140,9 +140,11 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
         //进行居中绘图
         int x_start = (AnimationPlayer_LCD_H_RES - width) / 2;
         int y_start = (AnimationPlayer_LCD_W_RES - height) / 2;
+
+        /* debug:查看大小端*/
         uint16_t pixel = buffer[0];
         ESP_LOGI("TEST", "pixel = 0x%04X, bytes: [0x%02X, 0x%02X]", 
-         pixel, ((uint8_t*)&pixel)[0], ((uint8_t*)&pixel)[1]);
+        pixel, ((uint8_t*)&pixel)[0], ((uint8_t*)&pixel)[1]);
 
 #if AnimationPlayer_DEBUG_MODE
     // 2. 记录结束时间并计算耗时
@@ -152,8 +154,8 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
 #endif
 
         // 调用原有的绘图函数
-        // my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
-        st7735_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//根据坐标绘制
+        // my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//gc9a01屏幕
+        st7735_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//st7735屏幕
         // 释放内存
         jpeg_free_align(buffer);
 

@@ -141,15 +141,13 @@ extern "C" void app_main(void)
     ESP_LOGI(TAG, "Initialize spiffs...");
     init_spiffs();
     
-    my_gc9a01_init();
+    // my_gc9a01_init();
 
-
-
-    // ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
-    // vTaskDelay(pdMS_TO_TICKS(100));
-    // //执行色彩测试
-    // st7735_test_pattern(lcd_handle);
-    // vTaskDelay(pdMS_TO_TICKS(2000));
+    ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
+    vTaskDelay(pdMS_TO_TICKS(100));
+    //执行色彩测试
+    st7735_test_pattern(lcd_handle);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
     // ✅ 3. 初始化按键
     button_init();
