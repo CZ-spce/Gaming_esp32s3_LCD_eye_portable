@@ -7,6 +7,11 @@
 #include "esp_jpeg_common.h" 
 #include "LCD_ST7735/my_ST7735.h"
 
+
+#define AnimationPlayer_LCD_H_RES 128
+#define AnimationPlayer_LCD_W_RES 128
+
+
 //调试开始宏
 #define AnimationPlayer_DEBUG_MODE 1
 
@@ -133,8 +138,8 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
     // 注意：确保 decode_jpeg_to_rgb565 在你的工程中是可链接的
     if (decode_jpeg_to_rgb565(path.c_str(), &buffer, &width, &height) == ESP_OK) {
         //进行居中绘图
-        int x_start = (LCD_H_RES - width) / 2;
-        int y_start = (LCD_V_RES - height) / 2;
+        int x_start = (AnimationPlayer_LCD_H_RES - width) / 2;
+        int y_start = (AnimationPlayer_LCD_W_RES - height) / 2;
 
 #if AnimationPlayer_DEBUG_MODE
     // 2. 记录结束时间并计算耗时

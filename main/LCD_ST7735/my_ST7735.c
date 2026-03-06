@@ -22,7 +22,7 @@ my_st7735_config_t config = {
         .lcd_height  = 128,
         .offset_x    = 0,    
         .offset_y    = 0,
-        .bgr_order   = false,
+        .bgr_order   = true,
         .invert_color= false, 
     };
 
@@ -33,124 +33,133 @@ struct my_st7735_ctx_t {
     int bl_io_num;
 };
 
+
+// void st7735_test_pattern(my_st7735_handle_t handle) {
+//     const int w = 128;
+//     const int h = 128; 
+//     // 每个色块高度
+//     int block_h = h / 8; 
+
+//     uint16_t *line_buffer = (uint16_t *)heap_caps_malloc(w * sizeof(uint16_t), MALLOC_CAP_DMA);
+//     if (!line_buffer) return;
+
+//     // 定义 8 种标准测试颜色 (目标颜色)
+//     // 顺序：红，绿，蓝，白，黑，青，黄，品红
+//     uint16_t target_colors[] = {
+//         0xF800, // 0: Red
+//         0x07E0, // 1: Green
+//         0x001F, // 2: Blue
+//         0xFFFF, // 3: White
+//         0x0000, // 4: Black
+//         0x07FF, // 5: Cyan (绿+蓝)
+//         0xFFE0, // 6: Yellow (红+绿)
+//         0xF81F  // 7: Magenta (红+蓝)
+//     };
+
+//     const char* color_names[] = {"RED", "GRN", "BLU", "WHT", "BLK", "CYA", "YEL", "MAG"};
+
+//     ESP_LOGI("TEST", "Starting Advanced Color Test with SWAP_GB simulation...");
+
+//     for (int i = 0; i < 8; i++) {
+//         uint16_t original_color = target_colors[i];
+        
+//         // // --- 核心模拟：软件交换 G 和 B ---
+//         // uint16_t r = (original_color >> 11) & 0x1F;
+//         // uint16_t g = (original_color >> 5) & 0x3F;
+//         // uint16_t b = original_color & 0x1F;
+        
+//         // // 交换 G 和 B
+//         // uint16_t swapped_color = (r << 11) | (b << 5) | g;
+//         // // -----------------------------
+//         // --- 核心模拟：软件交换 G 和 B (含位宽校正) ---
+//         uint16_t r = (original_color >> 11) & 0x1F;
+//         uint16_t g = (original_color >> 5) & 0x3F;  // 6 bits (0-63)
+//         uint16_t b = original_color & 0x1F;         // 5 bits (0-31)
+        
+//         // 交换并校正位宽：
+//         // 原 Green (6-bit) -> 新 Blue (5-bit): 取高 5 位 (>> 1)
+//         uint16_t new_b = g >> 1; 
+        
+//         // 原 Blue (5-bit) -> 新 Green (6-bit): 左移 1 位 (<< 1) 填补低位
+//         // 为了更精确，可以加上最低位补偿： (b << 1) | (b >> 4) 但通常 << 1 就够了
+//         uint16_t new_g = b << 1; 
+
+//         uint16_t swapped_color = (r << 11) | (new_g << 5) | new_b;
+//         // --------------------------------------------
+        
+
+//         // 填充缓冲区 (使用交换后的颜色)
+//         for (int j = 0; j < w; j++) {
+//             line_buffer[j] = swapped_color;
+//         }
+
+//         // 绘制当前色块
+//         int y_start = i * block_h;
+//         int y_end = (i + 1) * block_h;
+        
+//         for (int y = y_start; y < y_end; y++) {
+//             my_st7735_draw_bitmap(handle, 0, y, w, y + 1, line_buffer);
+//         }
+        
+//         // 这里可以加一点延时方便观察，或者打印日志
+//         // ESP_LOGI("TEST", "Block %d (%s) drawn with swapped value 0x%04X", i, color_names[i], swapped_color);
+//     }
+
+//     heap_caps_free(line_buffer);
+//     ESP_LOGI("TEST", "Advanced test done. Please check colors.");
+// }
+
 /**
  * @brief ST7735 基础功能测试：分区域填充红、绿、蓝、白
  * 用于验证颜色顺序和显示区域是否完整
  */
 void st7735_test_pattern(my_st7735_handle_t handle) {
     const int w = 128;
-    const int h = 128; 
-    // 每个色块高度
-    int block_h = h / 8; 
-
+    const int h = 128; // 根据你的屏幕实际高度调整，ST7735 常见有 128 或 160
+    
+    // 1. 分配一行像素的缓冲区 (256 字节)，使用 DMA 内存以获得最佳性能
     uint16_t *line_buffer = (uint16_t *)heap_caps_malloc(w * sizeof(uint16_t), MALLOC_CAP_DMA);
-    if (!line_buffer) return;
+    if (!line_buffer) {
+        ESP_LOGE("TEST", "Failed to alloc line buffer");
+        return;
+    }
 
-    // 定义 8 种标准测试颜色 (目标颜色)
-    // 顺序：红，绿，蓝，白，黑，青，黄，品红
-    uint16_t target_colors[] = {
-        0xF800, // 0: Red
-        0x07E0, // 1: Green
-        0x001F, // 2: Blue
-        0xFFFF, // 3: White
-        0x0000, // 4: Black
-        0x07FF, // 5: Cyan (绿+蓝)
-        0xFFE0, // 6: Yellow (红+绿)
-        0xF81F  // 7: Magenta (红+蓝)
+    ESP_LOGI("TEST", "Drawing color bands...");
+
+    // // 定义四种测试颜色 (RGB565)
+    // uint16_t test_colors[] = {
+    //     0xF800, // 红色 (Red)
+    //     0x07E0, // 绿色 (Green)
+    //     0x001F, // 蓝色 (Blue)
+    //     0xFFFF  // 白色 (White)
+    // };
+    // 解决 ESP32 内存小端模式与 SPI 大端传输的字节序反转问题
+    uint16_t test_colors[] = {
+        0x00F8, // 红色 (原 0xF800 高低字节交换)
+        0xE007, // 绿色 (原 0x07E0 高低字节交换)
+        0x1F00, // 蓝色 (原 0x001F 高低字节交换)
+        0xFFFF  // 白色
     };
 
-    const char* color_names[] = {"RED", "GRN", "BLU", "WHT", "BLK", "CYA", "YEL", "MAG"};
-
-    ESP_LOGI("TEST", "Starting Advanced Color Test with SWAP_GB simulation...");
-
-    for (int i = 0; i < 8; i++) {
-        uint16_t original_color = target_colors[i];
-        
-        // // --- 核心模拟：软件交换 G 和 B ---
-        // uint16_t r = (original_color >> 11) & 0x1F;
-        // uint16_t g = (original_color >> 5) & 0x3F;
-        // uint16_t b = original_color & 0x1F;
-        
-        // // 交换 G 和 B
-        // uint16_t swapped_color = (r << 11) | (b << 5) | g;
-        // // -----------------------------
-        // --- 核心模拟：软件交换 G 和 B (含位宽校正) ---
-        uint16_t r = (original_color >> 11) & 0x1F;
-        uint16_t g = (original_color >> 5) & 0x3F;  // 6 bits (0-63)
-        uint16_t b = original_color & 0x1F;         // 5 bits (0-31)
-        
-        // 交换并校正位宽：
-        // 原 Green (6-bit) -> 新 Blue (5-bit): 取高 5 位 (>> 1)
-        uint16_t new_b = g >> 1; 
-        
-        // 原 Blue (5-bit) -> 新 Green (6-bit): 左移 1 位 (<< 1) 填补低位
-        // 为了更精确，可以加上最低位补偿： (b << 1) | (b >> 4) 但通常 << 1 就够了
-        uint16_t new_g = b << 1; 
-
-        uint16_t swapped_color = (r << 11) | (new_g << 5) | new_b;
-        // --------------------------------------------
-        
-
-        // 填充缓冲区 (使用交换后的颜色)
+    for (int i = 0; i < 4; i++) {
+        // 填充颜色行缓冲区
         for (int j = 0; j < w; j++) {
-            line_buffer[j] = swapped_color;
+            line_buffer[j] = test_colors[i];
         }
 
-        // 绘制当前色块
-        int y_start = i * block_h;
-        int y_end = (i + 1) * block_h;
+        // 绘制屏幕的 1/4 区域
+        int y_start = i * (h / 4);
+        int y_end = (i + 1) * (h / 4);
         
+        // 逐行刷入，这种方式比一次性申请全屏内存更节省系统 RAM
         for (int y = y_start; y < y_end; y++) {
             my_st7735_draw_bitmap(handle, 0, y, w, y + 1, line_buffer);
         }
-        
-        // 这里可以加一点延时方便观察，或者打印日志
-        // ESP_LOGI("TEST", "Block %d (%s) drawn with swapped value 0x%04X", i, color_names[i], swapped_color);
     }
 
     heap_caps_free(line_buffer);
-    ESP_LOGI("TEST", "Advanced test done. Please check colors.");
+    ESP_LOGI("TEST", "Test pattern done.");
 }
-// void st7735_test_pattern(my_st7735_handle_t handle) {
-//     const int w = 128;
-//     const int h = 128; // 根据你的屏幕实际高度调整，ST7735 常见有 128 或 160
-    
-//     // 1. 分配一行像素的缓冲区 (256 字节)，使用 DMA 内存以获得最佳性能
-//     uint16_t *line_buffer = (uint16_t *)heap_caps_malloc(w * sizeof(uint16_t), MALLOC_CAP_DMA);
-//     if (!line_buffer) {
-//         ESP_LOGE("TEST", "Failed to alloc line buffer");
-//         return;
-//     }
-
-//     ESP_LOGI("TEST", "Drawing color bands...");
-
-//     // 定义四种测试颜色 (RGB565)
-//     uint16_t test_colors[] = {
-//         0xF800, // 红色 (Red)
-//         0x07E0, // 绿色 (Green)
-//         0x001F, // 蓝色 (Blue)
-//         0xFFFF  // 白色 (White)
-//     };
-
-//     for (int i = 0; i < 4; i++) {
-//         // 填充颜色行缓冲区
-//         for (int j = 0; j < w; j++) {
-//             line_buffer[j] = test_colors[i];
-//         }
-
-//         // 绘制屏幕的 1/4 区域
-//         int y_start = i * (h / 4);
-//         int y_end = (i + 1) * (h / 4);
-        
-//         // 逐行刷入，这种方式比一次性申请全屏内存更节省系统 RAM
-//         for (int y = y_start; y < y_end; y++) {
-//             my_st7735_draw_bitmap(handle, 0, y, w, y + 1, line_buffer);
-//         }
-//     }
-
-//     heap_caps_free(line_buffer);
-//     ESP_LOGI("TEST", "Test pattern done.");
-// }
 
 esp_err_t my_st7735_init(const my_st7735_config_t *config, my_st7735_handle_t *out_handle)
 {
@@ -170,13 +179,13 @@ esp_err_t my_st7735_init(const my_st7735_config_t *config, my_st7735_handle_t *o
         .quadhd_io_num = -1,
         .max_transfer_sz = config->lcd_width * config->lcd_height * sizeof(uint16_t),
     };
-    ESP_ERROR_CHECK(spi_bus_initialize(config->spi_host, &buscfg, SPI_DMA_CH_AUTO));
+    ESP_ERROR_CHECK(spi_bus_initialize(config->spi_host, &buscfg, SPI_DMA_CH_AUTO));//启动DMA传输
 
     // 2. 配置 LCD IO 句柄
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = config->dc_io_num,
         .cs_gpio_num = config->cs_io_num,
-        .pclk_hz = 40 * 1000 * 1000, // 40MHz
+        .pclk_hz = 10 * 1000 * 1000, // 10MHz
         .lcd_cmd_bits = 8,
         .lcd_param_bits = 8,
         .spi_mode = 0,
@@ -196,14 +205,14 @@ esp_err_t my_st7735_init(const my_st7735_config_t *config, my_st7735_handle_t *o
     ESP_ERROR_CHECK(esp_lcd_panel_reset(ctx->panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(ctx->panel_handle));
     
-    // 在 my_st7735_init 的 esp_lcd_panel_init(ctx->panel_handle) 之后添加：
-    esp_lcd_panel_io_handle_t io = ctx->io_handle;
+    // // 在 my_st7735_init 的 esp_lcd_panel_init(ctx->panel_handle) 之后添加：
+    // esp_lcd_panel_io_handle_t io = ctx->io_handle;
 
-    // 参考商家例程 0xC0 指令 (Power Control 1)
-    esp_lcd_panel_io_tx_param(io, 0xC0, (uint8_t[]){0xA2, 0x02, 0x84}, 3);
-    // 参考商家例程 0xC1 指令
-    esp_lcd_panel_io_tx_param(io, 0xC1, (uint8_t[]){0xC5}, 1);
-    // ... 以此类推，把商家那段长长的 0xE0/0xE1 补进去
+    // // 参考商家例程 0xC0 指令 (Power Control 1)
+    // esp_lcd_panel_io_tx_param(io, 0xC0, (uint8_t[]){0xA2, 0x02, 0x84}, 3);
+    // // 参考商家例程 0xC1 指令
+    // esp_lcd_panel_io_tx_param(io, 0xC1, (uint8_t[]){0xC5}, 1);
+    // // ... 以此类推，把商家那段长长的 0xE0/0xE1 补进去
 
 
     // 设置偏移量 (很多 ST7735 屏幕并非从 0,0 坐标开始物理显存)
@@ -213,6 +222,9 @@ esp_err_t my_st7735_init(const my_st7735_config_t *config, my_st7735_handle_t *o
     
     // 设置是否反色 (IPS 屏幕和 TN 屏幕在此配置上通常相反)
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(ctx->panel_handle, config->invert_color));
+
+    // // 初始化成功后，立即设置为上下翻转
+    // ESP_ERROR_CHECK(esp_lcd_panel_mirror(lcd_handle->panel_handle, false, true));
 
     // 开启显示
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(ctx->panel_handle, true));

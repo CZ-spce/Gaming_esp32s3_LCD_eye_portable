@@ -147,11 +147,9 @@ extern "C" void app_main(void)
 
     ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
     vTaskDelay(pdMS_TO_TICKS(100));
-    //2. 执行色彩测试 (替代掉你之前的全红刷屏代码)
-    // st7735_test_pattern(lcd_handle);
-    // uint16_t *white_buf = (uint16_t *)malloc(128 * 128 * 2);
-    // memset(white_buf, 0xFF, 128 * 128 * 2); // 填满白色
-    // my_st7735_draw_bitmap(lcd_handle, 0, 0, 128, 128, white_buf);
+    //执行色彩测试
+    st7735_test_pattern(lcd_handle);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
     // ✅ 3. 初始化按键
     button_init();
@@ -177,22 +175,22 @@ extern "C" void app_main(void)
 
     while (1) {
 
-      // ✅ 检测按键是否被按下
-        if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
-            ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
+    //   // ✅ 检测按键是否被按下
+    //     if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
+    //         ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
             
-            // 调用切换性别函数
-            player->switchGenderAnimation();
-            vTaskDelay(pdMS_TO_TICKS(1000));
+    //         // 调用切换性别函数
+    //         player->switchGenderAnimation();
+    //         vTaskDelay(pdMS_TO_TICKS(1000));
             
-        }
-        else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
-            ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
+    //     }
+    //     else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
+    //         ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
             
-            player->switchAnimation(blink);
-            vTaskDelay(pdMS_TO_TICKS(1000));
+    //         player->switchAnimation(blink);
+    //         vTaskDelay(pdMS_TO_TICKS(1000));
             
-        }
+    //     }
         
         // 让出 CPU 时间片，避免看门狗复位 (WDT Reset)
         // 10ms 的延时足够快以响应按键，又不会占用太多 CPU
