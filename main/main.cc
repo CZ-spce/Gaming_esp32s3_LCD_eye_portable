@@ -9,19 +9,17 @@
 #include "driver/gpio.h"
 
 // 自定义 GIF 库
-#include "gif_encoder/my_gifdec.h"
+// #include "gif_encoder/my_gifdec.h"
 
-//jpeg解码
-#include "jpeg_decoder/my_jpeg_decoder.h"
-#include "esp_jpeg_common.h" 
-#include "animation_player/AnimationPlayer.h" // 引入新模块
+/* lvgl显示组件 */
+// #include "my_lvgl/lvgl_UI_display.h"
+// #include "my_lvgl/lv_port_disp.h"
+// #include "lvgl.h"
+// #include "my_lvgl/lvgl_tick_timer.h"
 
-/* 显示组件 */
-#include "lvgl_UI_display.h"
-#include "LCD_gc9a01/my_gc9a01.h"
-#include "lv_port_disp.h"
-#include "lvgl.h"
-#include "lvgl_tick_timer.h"
+// //jpeg解码
+// #include "jpeg_decoder/my_jpeg_decoder.h"
+// #include "esp_jpeg_common.h" 
 
 /* 动画播放器 */
 #include "animation_player/AnimationPlayer.h"
@@ -34,18 +32,20 @@
 /* ST7735 LCD 屏幕 */
 #include "LCD_ST7735/my_ST7735.h"
 
+/* GC9A01 LCD 屏幕 */
+#include "LCD_gc9a01/my_gc9a01.h"
+
+#include "QMA6100P/QMA6100P.h"
+
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
 #define DEBUG_MODE 1
 
-#define GIF_FILE_PATH "dizzy.gif"
-
+//日记标签
 static const char *TAG = "main";
 static const char *T_TAG = "SYS_MONITOR";
 
-
+//按键宏定义
 #define BUTTON_ACTIVE_LEVEL 0  // 0: 低电平有效 (按下接地), 1: 高电平有效
-
-
 
 void init_spiffs(void) {
     ESP_LOGI("SPIFFS", "Initializing SPIFFS");
@@ -141,13 +141,13 @@ extern "C" void app_main(void)
     ESP_LOGI(TAG, "Initialize spiffs...");
     init_spiffs();
     
-    // my_gc9a01_init();
+    my_gc9a01_init();
 
-    ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
-    vTaskDelay(pdMS_TO_TICKS(100));
-    //执行色彩测试
-    st7735_test_pattern(lcd_handle);
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    // ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
+    // vTaskDelay(pdMS_TO_TICKS(100));
+    // //执行色彩测试
+    // st7735_test_pattern(lcd_handle);
+    // vTaskDelay(pdMS_TO_TICKS(2000));
 
     // ✅ 3. 初始化按键
     button_init();
@@ -173,22 +173,22 @@ extern "C" void app_main(void)
 
     while (1) {
 
-    //   // ✅ 检测按键是否被按下
-    //     if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
-    //         ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
+        // ✅ 检测按键是否被按下
+        if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
+            ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
             
-    //         // 调用切换性别函数
-    //         player->switchGenderAnimation();
-    //         vTaskDelay(pdMS_TO_TICKS(1000));
+            // 调用切换性别函数
+            player->switchGenderAnimation();
+            vTaskDelay(pdMS_TO_TICKS(1000));
             
-    //     }
-    //     else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
-    //         ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
+        }
+        else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
+            ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
             
-    //         player->switchAnimation(blink);
-    //         vTaskDelay(pdMS_TO_TICKS(1000));
+            player->switchAnimation(blink);
+            vTaskDelay(pdMS_TO_TICKS(1000));
             
-    //     }
+        }
         
         // 让出 CPU 时间片，避免看门狗复位 (WDT Reset)
         // 10ms 的延时足够快以响应按键，又不会占用太多 CPU

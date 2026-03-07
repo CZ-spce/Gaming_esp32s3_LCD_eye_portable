@@ -8,12 +8,12 @@
 #include "LCD_ST7735/my_ST7735.h"
 
 
-#define AnimationPlayer_LCD_H_RES 128
-#define AnimationPlayer_LCD_W_RES 128
+#define AnimationPlayer_LCD_H_RES 240
+#define AnimationPlayer_LCD_W_RES 240
 
 
 //调试开始宏
-#define AnimationPlayer_DEBUG_MODE 1
+#define AnimationPlayer_DEBUG_MODE 0
 
 #define AnimationPlayer_gender_MODE 0 //性别模式，选择是否衔接播放 ，0代表衔接
 
@@ -141,10 +141,6 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
         int x_start = (AnimationPlayer_LCD_H_RES - width) / 2;
         int y_start = (AnimationPlayer_LCD_W_RES - height) / 2;
 
-        /* debug:查看大小端*/
-        uint16_t pixel = buffer[0];
-        ESP_LOGI("TEST", "pixel = 0x%04X, bytes: [0x%02X, 0x%02X]", 
-        pixel, ((uint8_t*)&pixel)[0], ((uint8_t*)&pixel)[1]);
 
 #if AnimationPlayer_DEBUG_MODE
     // 2. 记录结束时间并计算耗时
@@ -154,8 +150,8 @@ bool AnimationPlayer::displayFrame(const std::string& path) {
 #endif
 
         // 调用原有的绘图函数
-        // my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//gc9a01屏幕
-        st7735_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//st7735屏幕
+        my_gc9a01_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//gc9a01屏幕
+        // st7735_draw_bitmap(x_start, y_start, x_start + width, y_start + height, buffer);//st7735屏幕
         // 释放内存
         jpeg_free_align(buffer);
 
