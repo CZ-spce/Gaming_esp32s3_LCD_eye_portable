@@ -20,9 +20,26 @@ extern "C" {
 #define LCD_H_RES   240
 #define LCD_V_RES   240
 
+// RGB565 颜色宏定义（16-bit）
+#define GC9A01_BLACK       0x0000    /* 黑色 */
+#define GC9A01_WHITE       0xFFFF    /* 白色 */
+#define GC9A01_RED         0xF800    /* 红色 */
+#define GC9A01_GREEN       0x07E0    /* 绿色 */
+#define GC9A01_BLUE        0x001F    /* 蓝色 */
+#define GC9A01_CYAN        0x07FF    /* 青色 */
+#define GC9A01_MAGENTA     0xF81F    /* 品红 */
+#define GC9A01_YELLOW      0xFFE0    /* 黄色 */
+#define GC9A01_ORANGE      0xFC00    /* 橙色 */
+#define GC9A01_GRAY        0x8410    /* 灰色 */
+#define GC9A01_DARKGRAY    0x4208    /* 深灰 */
+#define GC9A01_LIGHTGRAY   0xC618    /* 浅灰 */
+
 // 对外暴露的公共接口
 void my_gc9a01_init(void);
 void my_gc9a01_test_display(void);
+void my_gc9a01_draw_string(int16_t x, int16_t y, const char *str, uint16_t color);
+void my_gc9a01_clear_screen(uint16_t color);
+void my_gc9a01_clear_lines(int16_t y_start, int16_t y_end, uint16_t color);
 void my_gc9a01_draw_bitmap(int x_start, int y_start, int x_end, int y_end, const void *color_data);
 #ifdef __cplusplus
 }

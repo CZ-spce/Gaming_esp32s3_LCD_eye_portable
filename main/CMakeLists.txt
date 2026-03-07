@@ -7,7 +7,8 @@ idf_component_register(SRCS "main.cc"
                             "LCD_display/jpeg_decoder/my_jpeg_decoder.c"
                             "LCD_display/animation_player/AnimationPlayer.cc"
                             "LCD_display/LCD_ST7735/my_ST7735.c"
-                            "QMA6100P/QMA6100P.c"
+                            "QMA6100P/qma6100p.c"
+                            "IIC/iic.c"
                     PRIV_REQUIRES spi_flash
                     PRIV_REQUIRES spi_flash spiffs  # 添加 spiffs 依赖
                     INCLUDE_DIRS "."

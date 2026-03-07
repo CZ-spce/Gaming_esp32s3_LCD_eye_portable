@@ -35,10 +35,12 @@
 /* GC9A01 LCD 屏幕 */
 #include "LCD_gc9a01/my_gc9a01.h"
 
-#include "QMA6100P/QMA6100P.h"
+/* 三轴传感器 */
+#include "QMA6100P/qma6100p.h"
+#include "IIC/iic.h"
 
 // ▼▼▼ 调试打印开关：1代表开启，0代表彻底关闭 ▼▼▼
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 //日记标签
 static const char *TAG = "main";
@@ -46,6 +48,9 @@ static const char *T_TAG = "SYS_MONITOR";
 
 //按键宏定义
 #define BUTTON_ACTIVE_LEVEL 0  // 0: 低电平有效 (按下接地), 1: 高电平有效
+
+//I2C句柄-用于加速度计
+i2c_obj_t i2c0_master;
 
 void init_spiffs(void) {
     ESP_LOGI("SPIFFS", "Initializing SPIFFS");
@@ -129,6 +134,7 @@ void button_init(void) {
     ESP_LOGI(TAG, "Button initialized on GPIO%d and GPIO%d", GPIO_NUM_6,GPIO_NUM_7);
 }
 
+
 extern "C" void app_main(void)
 {
 
@@ -142,6 +148,8 @@ extern "C" void app_main(void)
     init_spiffs();
     
     my_gc9a01_init();
+    my_gc9a01_clear_screen(GC9A01_WHITE); 
+    my_gc9a01_draw_string(70, 120, "Hello, GC9A01!", GC9A01_BLUE);
 
     // ESP_ERROR_CHECK(my_st7735_init(&config, &lcd_handle));
     // vTaskDelay(pdMS_TO_TICKS(100));
@@ -152,11 +160,14 @@ extern "C" void app_main(void)
     // ✅ 3. 初始化按键
     button_init();
 
+    i2c0_master = iic_init(I2C_NUM_0);  /* 初始化IIC0 */
+    qma6100p_init(i2c0_master);         /* 初始化三轴加速度计 */
+    qma6100p_rawdata_t xyz_rawdata;
 
-// 创建并启动动画播放器
-    AnimationPlayer* player = AnimationPlayer::getInstance();
-    player->begin();
-    player->switchAnimation(angry);
+    // // 创建并启动动画播放器
+    // AnimationPlayer* player = AnimationPlayer::getInstance();
+    // player->begin();
+    // player->switchAnimation(angry);
 
     
      
@@ -173,26 +184,36 @@ extern "C" void app_main(void)
 
     while (1) {
 
+           qma6100p_read_rawdata(&xyz_rawdata);
+
+            // 添加简短打印（适合快速查看）
+            printf("SENSOR: X=%.2f Y=%.2f Z=%.2f P=%.1f R=%.1f\n", 
+                xyz_rawdata.acc_x, 
+                xyz_rawdata.acc_y, 
+                xyz_rawdata.acc_z,
+                xyz_rawdata.pitch,
+                xyz_rawdata.roll);
+
         // ✅ 检测按键是否被按下
         if (gpio_get_level(GPIO_NUM_6) == BUTTON_ACTIVE_LEVEL) {
             ESP_LOGI(TAG, "🔘 Button6 Pressed! Switching gender...");
-            
-            // 调用切换性别函数
-            player->switchGenderAnimation();
-            vTaskDelay(pdMS_TO_TICKS(1000));
+
+            // // 调用切换性别函数
+            // player->switchGenderAnimation();
+            // vTaskDelay(pdMS_TO_TICKS(1000));
             
         }
         else if (gpio_get_level(GPIO_NUM_7) == BUTTON_ACTIVE_LEVEL) {
             ESP_LOGI(TAG, "🔘 Button7 Pressed! Switching AnimationConfig...");
             
-            player->switchAnimation(blink);
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            // player->switchAnimation(blink);
+            // vTaskDelay(pdMS_TO_TICKS(1000));
             
         }
         
         // 让出 CPU 时间片，避免看门狗复位 (WDT Reset)
         // 10ms 的延时足够快以响应按键，又不会占用太多 CPU
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
       
 }
